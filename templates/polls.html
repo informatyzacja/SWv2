@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+    <a href="/admin/addpoll">Dodaj głosowanie</a>
+    <h3>Lista głosowań</h3>
+    {% for poll in polls %}
+        Nazwa: {{ poll.name }} <br/>
+        Konczy się {{ poll.closesOnDate }} <br/>
+        <a href="/admin/editpoll?id={{ poll.id }}">Edytuj</a> <br />
+        -------- <br />
+    {% endfor %}
+</body>
+</html>

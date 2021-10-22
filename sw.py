@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, render_template, redirect
 import sqlite3
 import json
 import dateutil.parser
@@ -190,3 +190,38 @@ def schedule_all_post():
     get_db().commit()
 
     return ""
+
+@app.route('/admin/polls', methods=['GET'])
+def admin_polls():
+    # TODO: access control
+    polls = list({
+            'id': voting[0],
+            'name': voting[1],
+            'choices': json.loads(voting[2]),
+            'choiceType': voting[3],
+            'visibility': voting[4],
+            'closesOnDate': voting[5]
+        } for voting in query_db('select id, name, options, choice_type, visibility, closes_on_date from votings'))
+    return render_template('polls.html', polls=polls)
+
+@app.route('/admin/addpoll', methods=['GET'])
+def admin_addpoll():
+    return render_template('addpoll.html')
+
+@app.route('/admin/addpoll', methods=['POST'])
+def admin_addpoll_post():
+    cur = get_db().cursor()
+    cur.execute('insert into votings(name, options, choice_type, visibility, possible_recipients, closes_on_date, sent_to) \
+                    values(?,?,?,?,?,?,"[]");',
+        [
+            request.form['name'],
+            json.dumps(request.form['options']),
+            request.form['choiceType'],
+            request.form['visibility'],
+            json.dumps(request.form['recipients']),
+            request.form['closesOnDate']
+        ])
+    #rowid = cur.lastrowid
+    get_db().commit()
+
+    return redirect('/admin/polls', code=303)
