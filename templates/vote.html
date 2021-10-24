@@ -5,12 +5,13 @@
     <title>Głosowanie</title>
 </head>
 <body>
-    Głosowanie na przewodniczącego WRSS<br/>
+    <h2>{{ name }}</h2><br/>
     <form method="POST" action="vote">
-        <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike">  <label for="vehicle1"> I have a bike</label><br>
-        <input type="checkbox" id="vehicle2" name="vehicle2" value="Car">  <label for="vehicle2"> I have a car</label><br>
-        <input type="checkbox" id="vehicle3" name="vehicle3" value="Train">  <label for="vehicle3"> I have a boat</label><br>
-
+        {% for option in options %}
+            <input type="checkbox" id="option_{{loop.index0}}" name="option_{{loop.index0}}" value="{{option['name']}}">
+            <label for="option_{{loop.index0}}">{{ option['name'] }} <small>{{ option['description'] }}</small></label>
+            <br/>
+        {% endfor %}
         <input type="submit" value="Submit">
     </form>
 </body>

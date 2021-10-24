@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<head>    
+    <meta charset="UTF-8">
+    <title>Wyniki</title>
+</head>    
+<body>
+    Wyniki głosowania "{{name}}" <br/><br/>
+
+    Uprawnionych do głosowania: {{possible_recipients_len}} osób<br/>
+    Dodanych do "do wysłania": {{sending_out_to_len}} osób<br/>
+    Wysłano mail do: {{sent_to_len}} osób<br/>
+    Zagłosowało: {{voted_len}} osób<br/>
+
+    <br/>
+
+    <table border=1>
+        <tr>
+            <th>Wybór</th>
+            <th>Opis</th>
+            <th>Ilość głosów</th>
+        </tr>
+        {% for result in results %}
+            <tr>
+                <td>{{ result['name'] }}</td>
+                <td>{{ result['description'] }}</td>
+                <td>{{ result['score'] }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+</body>    
+</html>
+

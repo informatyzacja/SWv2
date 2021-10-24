@@ -2,15 +2,29 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title></title>
+    <title>Lista głosowań</title>
 </head>
 <body>
-    <a href="/admin/addpoll">Dodaj głosowanie</a>
+    <!-- Miejsce na błędy, na przykład "nie można edytować głosowania ponieważ wiaddomości zostały już rozesłane -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class=flashes>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <a href="/admin/logout">Wyloguj się</a> <br />
+    <a href="/admin/addpoll">Dodaj głosowanie</a> <br />
     <h3>Lista głosowań</h3>
     {% for poll in polls %}
         Nazwa: {{ poll.name }} <br/>
         Konczy się {{ poll.closesOnDate }} <br/>
         <a href="/admin/editpoll?id={{ poll.id }}">Edytuj</a> <br />
+        <a href="/admin/sendout?id={{ poll.id }}">Rozsyłka maili</a> <br />
+        <a href="/admin/results?id={{ poll.id }}">Wyniki</a> <br />
         -------- <br />
     {% endfor %}
 </body>

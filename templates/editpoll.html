@@ -2,10 +2,13 @@
 <html>
 <head>    
     <meta charset="UTF-8">
-    <title>Dodawanie głosowania</title>
+    <title>Edycja głosowania</title>
 </head>    
 <body>
-    Nazwa głosowania: <input type="text" id="pollName"> <br /> <br />
+    {% if sending_out_to_amount != 0 %}
+        <h3 style="color: red">Nie można edytować głosowania ponieważ wiadomości zostały już wysłane lub zakolejnowane do {{ sending_out_to_amount }} osób</h3>
+    {% endif %}
+    Nazwa głosowania: <input type="text" id="pollName" value="{{ name }}"> <br /> <br />
     Opcje do wyboru:
     <table border=1>
         <thead>
@@ -16,6 +19,13 @@
             </tr>
         </thead>
         <tbody id="pollOptionsTBody">
+            {% for option in options %}
+                <tr>
+                    <td><input type="text" value="{{ option['name'] }}"></td>
+                    <td><input type="text" value="{{ option['description'] }}"></td>
+                    <td><button onclick="deleteRow(this)">Usuń</button></td>
+                </tr>
+            {% endfor %}
             <tr>
                 <td colspan=3><button onclick="addRow(this)">Dodaj nową opcję</button></td>
             </tr>
@@ -23,49 +33,19 @@
     </table>
     <br /> <br />
 
-    Głosujacy (adresy email w nowych liniach): <br/> <textarea id="pollRecipients"></textarea> <br /> <br />
-    Data zakończenia głosowania: <input type="date" id="pollClosesOnDate"> <input type="time" id="pollClosesOnTime"> <br /> <br />
+    Głosujacy (adresy email w nowych liniach): <br/> <textarea id="pollRecipients">{{ "\n".join(possible_recipients) }}</textarea> <br /> <br />
+    Data zakończenia głosowania: <input type="date" id="pollClosesOnDate" value="{{ closes_on_date.split(" ")[0] }}"> <input type="time" id="pollClosesOnTime" value="{{ closes_on_date.split(" ")[1] }}"> <br /> <br />
 
     Treść maila:<br/>
-    <textarea id="pollMailTemplate" rows=50 cols=90>
-For English, scroll down.
+    <textarea id="pollMailTemplate" rows=50 cols=90>{{mail_template}}</textarea>
 
-
-Dzień dobry,
-
-Serdecznie zapraszamy do udziału w głosowaniu na temat:
-{name}
-
-Głosowanie jest możliwe za pośrednictwem strony, której adres znajduje się poniżej:   
-{link}
-
-Głosowanie odbędzie się do {date_to}.
-
-W przypadku pytań zapraszamy do kontaktu mailowego:
-informatyzacja@samorzad.pwr.edu.pl
-
-Z poważaniem
-Komisja Wyborcza Studentów Politechniki Wrocławskiej
-
-----------------------------------------------------
-
-Dear Sir or Madam
-
-We would like to invite you to vote on the topic:
-{name}.
-
-The voting is possible on the website down below, until {date_to}:
-{link}    
-
-If you have any questions, please contact us through email:
-informatyzacja@samorzad.pwr.edu.pl
-
-Sincerely
-The Students Electoral Commission of Wrocław University of Science and Technology
-    </textarea>
     <br/><br/>
 
-    <input type="submit" value="Dodaj głosowanie" onclick="send()">
+    {% if sending_out_to_amount != 0 %}
+        <input type="submit" value="Zapisz głosowanie" disabled>
+    {% else %}
+        <input type="submit" value="Zapisz głosowanie" onclick="send()">
+    {% endif %}
 
     <script>
         function deleteRow(el) {
@@ -86,7 +66,7 @@ The Students Electoral Commission of Wrocław University of Science and Technolo
         function sendForm(data) {
             let form = document.createElement('form');
             form.method = "POST";
-            form.action = "";
+            form.action = "?id={{poll_id}}";
             form.style.display = 'none';
             for(let attrname in data) {
                 let inp = document.createElement('input');
@@ -112,7 +92,7 @@ The Students Electoral Commission of Wrocław University of Science and Technolo
                 recipients: JSON.stringify(pollRecipients.value.split('\n').filter(email => email.length != 0).map(email => email.trim())),
                 closesOnDate: val('pollClosesOnDate') + ' ' + val('pollClosesOnTime'),
                 visibility: 'private',
-                mailTemplate: val('pollMailTemplate')
+                mailTemplate: 'pollMailTemplate'
             }
             sendForm(data)
         }

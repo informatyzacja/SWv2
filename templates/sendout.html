@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rozsyłka maili</title>
+</head>
+<body>
+    <a href="polls">Powrót do listy głosowań</a><br />
+    Rozsyłka maili dla głosowania "{{name}}". <br/><br/>
+
+    {% if mailing_active %}
+        Rozsyłanie maili z "do wysłania" jest aktywne.<button onclick="sendForm('sendout/deactivatemailing?id={{ id }}', {})">Deaktywuj</button>
+    {% else %}
+        Rozsyłanie maili z "do wysłania" nie jest aktywne.<button onclick="sendForm('sendout/activatemailing?id={{ id }}', {})">Aktywuj</button>
+    {% endif %}
+
+    <br/><br/>
+
+    Jeszcze nie wysłane: <br />
+    <select id="possible_recipients" name="possible_recipients" multiple size="{{ possible_recipients | length }}" style="min-width: 150px">
+        {% for email_address in possible_recipients %}
+            <option value="{{ email_address }}">{{ email_address }}</option>
+        {% endfor %}
+    </select>
+    <br />
+    <button onclick="queueSelected()">Wyślij do zaznaczonych</button>
+    <button onclick="queueAll()">Wyślij do wszystkich</button>
+    <br /> <br />
+
+    Do wysłania: <br />
+    <select id="sending_out_to" name="sending_out_to" multiple size="{{ sending_out_to | length }}" style="min-width: 150px">
+        {% for email_address in sending_out_to %}
+            <option value="{{ email_address }}">{{ email_address }}</option>
+        {% endfor %}
+    </select>
+    <br /><br />
+
+    Wysłano do: <br />
+    <select id="sent_to" name="sent_to" multiple size="{{ sent_to | length }}" style="min-width: 150px">
+        {% for email_address in sent_to %}
+            <option value="{{ email_address }}">{{ email_address }}</option>
+        {% endfor %}
+    </select>
+    <br /><br />
+
+    <script>
+        function selectedEmails() {
+            const selected = document.querySelectorAll('#possible_recipients option:checked');
+            return Array.from(selected).map(el => el.value);
+        }
+        function queueSelected() {
+            const selected = selectedEmails();
+            if(selected.length == 0) {
+                alert('Nie wybrano żadnych adresów email')
+                return;
+            }
+            sendForm("/admin/sendout/queueselected?id={{ id }}", { selected: JSON.stringify(selected) })
+        }
+        function queueAll() {
+            sendForm("/admin/sendout/queueall?id={{ id }}", {})
+        }
+        function sendForm(action, data) {
+            let form = document.createElement('form');
+            form.method = "POST";
+            form.action = action;
+            form.style.display = 'none';
+            for(let attrname in data) {
+                let inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = attrname;
+                inp.value = data[attrname];
+                form.appendChild(inp);
+            }
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+</body>
+</html>
