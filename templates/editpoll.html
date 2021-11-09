@@ -1,51 +1,65 @@
-<!doctype html>
-<html>
-<head>    
-    <meta charset="UTF-8">
-    <title>Edycja głosowania</title>
-</head>    
-<body>
-    {% if sending_out_to_amount != 0 %}
-        <h3 style="color: red">Nie można edytować głosowania ponieważ wiadomości zostały już wysłane lub zakolejnowane do {{ sending_out_to_amount }} osób</h3>
-    {% endif %}
-    Nazwa głosowania: <input type="text" id="pollName" value="{{ name }}"> <br /> <br />
-    Opcje do wyboru:
-    <table border=1>
-        <thead>
-            <tr>
-                <td>Wybór</td>
-                <td>Opis</td>
-                <td></td>
-            </tr>
-        </thead>
-        <tbody id="pollOptionsTBody">
-            {% for option in options %}
-                <tr>
-                    <td><input type="text" value="{{ option['name'] }}"></td>
-                    <td><input type="text" value="{{ option['description'] }}"></td>
-                    <td><button onclick="deleteRow(this)">Usuń</button></td>
-                </tr>
-            {% endfor %}
-            <tr>
-                <td colspan=3><button onclick="addRow(this)">Dodaj nową opcję</button></td>
-            </tr>
-        </tbody>
-    </table>
-    <br /> <br />
+{% extends "baseloggedin.html" %}
+{% block title %}Edytowanie głosowania "{{name}}"{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        {% if sending_out_to_amount != 0 %}
+            <div class="alert alert-warning mb-5" role="alert">
+               <i class="fas fa-exclamation-triangle"></i> Nie można edytować głosowania ponieważ wiadomości zostały już wysłane lub zakolejnowane do wysłania do {{ sending_out_to_amount }} osób
+            </div>
+        {% endif %}
 
-    Głosujacy (adresy email w nowych liniach): <br/> <textarea id="pollRecipients">{{ "\n".join(possible_recipients) }}</textarea> <br /> <br />
-    Data zakończenia głosowania: <input type="date" id="pollClosesOnDate" value="{{ closes_on_date.split(" ")[0] }}"> <input type="time" id="pollClosesOnTime" value="{{ closes_on_date.split(" ")[1] }}"> <br /> <br />
+        <h3 class="mb-5">Edycja głosowania "{{name}}"</h3>
 
-    Treść maila:<br/>
-    <textarea id="pollMailTemplate" rows=50 cols=90>{{mail_template}}</textarea>
+        Nazwa głosowania: <input type="text" class="form-control" id="pollName" placeholder="Wybory na prezydenta Rzeczypospolitej Polskiej" value="{{name}}" {{should_disable}}> <br /> <br />
+        Opcje do wyboru:
+        <div class="card">
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Wybór</th>
+                            <th>Opis</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="pollOptionsTBody">
+                        {% for option in options %}
+                            <tr>
+                                <td><input class="form-control" type="text" placeholder="Jan Kowalski" value="{{ option['name'] }}" {{should_disable}}></td>
+                                <td><input class="form-control" type="text" placeholder="Wydział Architektury" value="{{ option['description'] }}" {{should_disable}}></td>
+                                <td><button class="btn btn-danger" onclick="deleteRow(this)" {{should_disable}}><i class="fas fa-trash-alt"></i></button></td>
+                            </tr>
+                        {% endfor %}
+                        <tr>
+                            <td colspan=3><button class="btn btn-primary w-100" onclick="addRow(this)" {{should_disable}}><i class="fas fa-plus"></i> Dodaj nową opcję</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <br /> <br />
 
-    <br/><br/>
+        Głosujacy (adresy email w nowych liniach): <br/>
+        <textarea class="form-control" id="pollRecipients" placeholder="1@student.pwr.edu.pl&#10;2@student.pwr.edu.pl&#10;..." rows=10 {{should_disable}}>{{ "\n".join(possible_recipients) }}</textarea>
+        <br /> <br />
+        <div class="d-flex justify-content-left align-items-center">
+            Data zakończenia głosowania:
+            <div class="col-md-3 ms-3">
+                <input type="date" class="form-control" id="pollClosesOnDate" value="{{ closes_on_date.split(" ")[0] }}" {{should_disable}}>
+            </div>
+            <div class="col-md-3 ms-3">
+                <input type="time" class="form-control" id="pollClosesOnTime" value="{{ closes_on_date.split(" ")[1] }}" {{should_disable}}>
+            </div>
+        </div>
+        <br /> <br />
 
-    {% if sending_out_to_amount != 0 %}
-        <input type="submit" value="Zapisz głosowanie" disabled>
-    {% else %}
-        <input type="submit" value="Zapisz głosowanie" onclick="send()">
-    {% endif %}
+        Treść maila:<br/>
+        <textarea id="pollMailTemplate" rows=37 cols=90 class="form-control" {{should_disable}}>{{ mail_template }}</textarea>
+       
+        <input type="submit" class="btn btn-success my-4 float-end" value="Zapisz głosowanie" onclick="send()" {{should_disable}}>
+    </div>
+</div>
 
     <script>
         function deleteRow(el) {
@@ -55,9 +69,9 @@
         function addRow(el) {
             var row = el.parentNode.parentNode;
             var tr = document.createElement('tr');
-            tr.innerHTML = '<td><input type="text"></td>';
-            tr.innerHTML += '<td><input type="text"></td>';
-            tr.innerHTML += '<td><button onclick="deleteRow(this)">Usuń</button></td>';
+            tr.innerHTML = '<td><input class="form-control" type="text" placeholder="Jan Kowalski"></td>';
+            tr.innerHTML += '<td><input class="form-control" type="text" placeholder="Wydział Architektury"></td>';
+            tr.innerHTML += '<td><button class="btn btn-danger" onclick="deleteRow(this)"><i class="fas fa-trash-alt"></i></button></td>';
             document.getElementById('pollOptionsTBody').insertBefore(tr, row);
         }
         function val(elName) {
@@ -92,11 +106,9 @@
                 recipients: JSON.stringify(pollRecipients.value.split('\n').filter(email => email.length != 0).map(email => email.trim())),
                 closesOnDate: val('pollClosesOnDate') + ' ' + val('pollClosesOnTime'),
                 visibility: 'private',
-                mailTemplate: 'pollMailTemplate'
+                mailTemplate: val('pollMailTemplate')
             }
             sendForm(data)
         }
     </script>
-</body>    
-</html>
-
+{% endblock %}

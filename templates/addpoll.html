@@ -1,33 +1,49 @@
-<!doctype html>
-<html>
-<head>    
-    <meta charset="UTF-8">
-    <title>Dodawanie głosowania</title>
-</head>    
-<body>
-    Nazwa głosowania: <input type="text" id="pollName"> <br /> <br />
-    Opcje do wyboru:
-    <table border=1>
-        <thead>
-            <tr>
-                <td>Wybór</td>
-                <td>Opis</td>
-                <td></td>
-            </tr>
-        </thead>
-        <tbody id="pollOptionsTBody">
-            <tr>
-                <td colspan=3><button onclick="addRow(this)">Dodaj nową opcję</button></td>
-            </tr>
-        </tbody>
-    </table>
-    <br /> <br />
+{% extends "baseloggedin.html" %}
+{% block title %}Dodawanie głosowania{% endblock %}
+{% block active_add_poll %}active{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h3 class="mb-5">Dodawanie nowego głosowania</h3>
 
-    Głosujacy (adresy email w nowych liniach): <br/> <textarea id="pollRecipients"></textarea> <br /> <br />
-    Data zakończenia głosowania: <input type="date" id="pollClosesOnDate"> <input type="time" id="pollClosesOnTime"> <br /> <br />
+        Nazwa głosowania: <input type="text" class="form-control" id="pollName" placeholder="Wybory na prezydenta Rzeczypospolitej Polskiej"> <br /> <br />
+        Opcje do wyboru:
+        <div class="card">
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Wybór</th>
+                            <th>Opis</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="pollOptionsTBody">
+                        <tr>
+                            <td colspan=3><button class="btn btn-primary w-100" onclick="addRow(this)"><i class="fas fa-plus"></i> Dodaj nową opcję</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <br /> <br />
 
-    Treść maila:<br/>
-    <textarea id="pollMailTemplate" rows=50 cols=90>
+        Głosujacy (adresy email w nowych liniach): <br/>
+        <textarea class="form-control" id="pollRecipients" placeholder="1@student.pwr.edu.pl&#10;2@student.pwr.edu.pl&#10;..." rows=10></textarea>
+        <br /> <br />
+        <div class="d-flex justify-content-left align-items-center">
+            Data zakończenia głosowania:
+            <div class="col-md-3 ms-3">
+                <input type="date" class="form-control" id="pollClosesOnDate">
+            </div>
+            <div class="col-md-3 ms-3">
+                <input type="time" class="form-control" id="pollClosesOnTime">
+            </div>
+        </div>
+        <br /> <br />
+
+        Treść maila:<br/>
+        <textarea id="pollMailTemplate" rows=37 cols=90 class="form-control">
 For English, scroll down.
 
 
@@ -54,7 +70,7 @@ Dear Sir or Madam
 We would like to invite you to vote on the topic:
 {name}.
 
-The voting is possible on the website down below, until {date_to}:
+Voting is possible on the website down below, until {date_to}:
 {link}    
 
 If you have any questions, please contact us through email:
@@ -62,61 +78,60 @@ informatyzacja@samorzad.pwr.edu.pl
 
 Sincerely
 The Students Electoral Commission of Wrocław University of Science and Technology
-    </textarea>
-    <br/><br/>
+        </textarea>
+       
+        <input type="submit" class="btn btn-success my-4 float-end" value="Dodaj głosowanie" onclick="send()">
+    </div>
+</div>
 
-    <input type="submit" value="Dodaj głosowanie" onclick="send()">
-
-    <script>
-        function deleteRow(el) {
-            var row = el.parentNode.parentNode;
-            document.getElementById('pollOptionsTBody').removeChild(row);
+<script>
+    function deleteRow(el) {
+        var row = el.parentNode.parentNode;
+        document.getElementById('pollOptionsTBody').removeChild(row);
+    }
+    function addRow(el) {
+        var row = el.parentNode.parentNode;
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td><input class="form-control" type="text" placeholder="Jan Kowalski"></td>';
+        tr.innerHTML += '<td><input class="form-control" type="text" placeholder="Wydział Architektury"></td>';
+        tr.innerHTML += '<td><button class="btn btn-danger" onclick="deleteRow(this)"><i class="fas fa-trash-alt"></i></button></td>';
+        document.getElementById('pollOptionsTBody').insertBefore(tr, row);
+    }
+    function val(elName) {
+        return document.getElementById(elName).value; 
+    }
+    function sendForm(data) {
+        let form = document.createElement('form');
+        form.method = "POST";
+        form.action = "";
+        form.style.display = 'none';
+        for(let attrname in data) {
+            let inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = attrname;
+            inp.value = data[attrname];
+            form.appendChild(inp);
         }
-        function addRow(el) {
-            var row = el.parentNode.parentNode;
-            var tr = document.createElement('tr');
-            tr.innerHTML = '<td><input type="text"></td>';
-            tr.innerHTML += '<td><input type="text"></td>';
-            tr.innerHTML += '<td><button onclick="deleteRow(this)">Usuń</button></td>';
-            document.getElementById('pollOptionsTBody').insertBefore(tr, row);
+        document.body.appendChild(form);
+        form.submit();
+    }
+    function send() {
+        let options = Array.from(document.getElementById('pollOptionsTBody').rows)
+                .filter(row => row.childElementCount != 1) // filter out the last row with the add button
+                .map(row => ({
+                    name: row.children[0].getElementsByTagName('input')[0].value,
+                    description: row.children[1].getElementsByTagName('input')[0].value,
+                }));
+        let data = {
+            name: val('pollName'),
+            options: JSON.stringify(options),
+            choiceType: 'multiple-choice',
+            recipients: JSON.stringify(pollRecipients.value.split('\n').filter(email => email.length != 0).map(email => email.trim())),
+            closesOnDate: val('pollClosesOnDate') + ' ' + val('pollClosesOnTime'),
+            visibility: 'private',
+            mailTemplate: val('pollMailTemplate')
         }
-        function val(elName) {
-            return document.getElementById(elName).value; 
-        }
-        function sendForm(data) {
-            let form = document.createElement('form');
-            form.method = "POST";
-            form.action = "";
-            form.style.display = 'none';
-            for(let attrname in data) {
-                let inp = document.createElement('input');
-                inp.type = 'hidden';
-                inp.name = attrname;
-                inp.value = data[attrname];
-                form.appendChild(inp);
-            }
-            document.body.appendChild(form);
-            form.submit();
-        }
-        function send() {
-            let options = Array.from(document.getElementById('pollOptionsTBody').rows)
-                    .filter(row => row.childElementCount != 1) // filter out the last row with the add button
-                    .map(row => ({
-                        name: row.children[0].getElementsByTagName('input')[0].value,
-                        description: row.children[1].getElementsByTagName('input')[0].value,
-                    }));
-            let data = {
-                name: val('pollName'),
-                options: JSON.stringify(options),
-                choiceType: 'multiple-choice',
-                recipients: JSON.stringify(pollRecipients.value.split('\n').filter(email => email.length != 0).map(email => email.trim())),
-                closesOnDate: val('pollClosesOnDate') + ' ' + val('pollClosesOnTime'),
-                visibility: 'private',
-                mailTemplate: val('pollMailTemplate')
-            }
-            sendForm(data)
-        }
-    </script>
-</body>    
-</html>
-
+        sendForm(data)
+    }
+</script>
+{% endblock %}

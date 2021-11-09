@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>System Wyborczy Samorządu Studenckiego Politechniki Wrocławskiej</title>
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="/static/fontawesome-free-5.15.4-web/css/all.min.css"> -->
+</head>
+<body class="bg-light">
+    <div class="container">
+        <main>
+            <div class="py-5 text-center">
+                <img class="d-block mx-auto mb-4" src="/static/logo-with-embedded-font/logo-system-square-full.svg" alt="" style="max-width: 25em">
+                <h2>Wybory na Komisję Wyborczą</h2>
+            </div>
+            <div class="mx-auto" style="max-width: 50em">
+                <form method="POST" action="vote" class="form-control">
+                    <div class="m-3">
+                    <!-- {% for option in options %} -->
+                        <input type="checkbox" id="option_{{loop.index0}}" name="option_{{loop.index0}}" value="{{option['name']}}" class="form-check-input">
+                        <label class="form-check-label" for="option_{{loop.index0}}">{{ option['name'] }} <small>{{ option['description'] }}</small></label>
+                    <!-- {% endfor %} -->
+                    </div>
+                    <input type="submit" value="Głosuj" class="w-100 my-3 btn btn-primary btn-lg form-control">
+                </form>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

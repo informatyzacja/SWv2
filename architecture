@@ -1,0 +1,11 @@
+/opt/sw/
+    -> nginx.conf
+    -> sw-admin.py
+    -> poll/  (should be writable for python and nginx, so the http or www user)
+        -> <poll-id>/
+            -> index.html
+            -> results/
+                -> <vote1>
+                -> <vote2>
+    -> v/  (should be writable for at least python)
+        -> <user-token>  ---softlink-to-->  ../poll/<poll-id>

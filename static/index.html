@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>System Wyborczy Samorządu Studenckiego Politechniki Wrocławskiej</title>
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="/static/fontawesome-free-5.15.4-web/css/all.min.css"> -->
+</head>
+<body class="bg-light">
+    <div class="container">
+        <main>
+            <div class="py-5 text-center">
+                <img class="d-block mx-auto mb-4" src="/static/logo-with-embedded-font/logo-system-square-full.svg" alt="" style="max-width: 25em">
+            </div>
+            <div class="mx-auto" style="max-width: 35em">
+                <div class="mb-3">
+                    <label for="token" class="form-label">Token/link</label>
+                    <input type="text" class="form-control" id="token" name="token" autocomplete="off">
+                </div>
+                <button id="go" class="w-100 my-3 btn btn-primary btn-lg" disabled>Przejdź do głosowania</button>
+            </div>
+        </main>
+    </div>
+    <script>
+        function goesTo(url) {
+            return function() {
+                window.location.href = url;
+            }
+        }
+        function updateButton() {
+            var text = document.getElementById('token').value;
+            var btn = document.getElementById('go');
+            var uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}/i;
+            var matchedToken = text.match(uuidRegex);
+            if (matchedToken) {
+                go.disabled = false;
+                go.onclick = goesTo('/v/' + matchedToken[0] + '/');
+            } else {
+                go.disabled = true;
+            }
+        }
+        document.getElementById('token').addEventListener('change', updateButton);
+        document.getElementById('token').addEventListener('input', updateButton);
+        window.addEventListener('load', updateButton);
+        window.addEventListener('popstate', updateButton);
+    </script>
+</body>
+</html>

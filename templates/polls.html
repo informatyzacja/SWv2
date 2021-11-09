@@ -1,31 +1,53 @@
-<!doctype html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Lista głosowań</title>
-</head>
-<body>
-    <!-- Miejsce na błędy, na przykład "nie można edytować głosowania ponieważ wiaddomości zostały już rozesłane -->
+{% extends "baseloggedin.html" %}
+{% block title %}Lista głosowań{% endblock %}
+{% block active_poll_list %}active{% endblock %}
+{% block content %}
+    <!-- Miejsce na błędy, na przykład "nie można edytować głosowania ponieważ wiadomości zostały już rozesłane -->
     {% with messages = get_flashed_messages() %}
         {% if messages %}
-            <ul class=flashes>
+            <div class="my-4">
                 {% for message in messages %}
-                    <li>{{ message }}</li>
+                    <div class="alert alert-danger" role="alert">{{ message }}</div>
                 {% endfor %}
-            </ul>
+            </div>
         {% endif %}
     {% endwith %}
 
-    <a href="/admin/logout">Wyloguj się</a> <br />
-    <a href="/admin/addpoll">Dodaj głosowanie</a> <br />
-    <h3>Lista głosowań</h3>
-    {% for poll in polls %}
-        Nazwa: {{ poll.name }} <br/>
-        Konczy się {{ poll.closesOnDate }} <br/>
-        <a href="/admin/editpoll?id={{ poll.id }}">Edytuj</a> <br />
-        <a href="/admin/sendout?id={{ poll.id }}">Rozsyłka maili</a> <br />
-        <a href="/admin/results?id={{ poll.id }}">Wyniki</a> <br />
-        -------- <br />
-    {% endfor %}
-</body>
-</html>
+
+    <div class="col-md-12">
+        <h3 class="my-4">Lista głosowań do których masz dostęp</h3>
+    </div>
+
+    {% if polls|length > 0 %}
+        <div class="col-md-12">
+            <ol class="list-group list-group-numbered">
+                {% for poll in polls %}
+                    <li class="list-group-item d-md-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto align-items-center">
+                            <strong>{{ poll.name }}</strong>  <br/>
+                            <div class="mb-1 mt-2">
+                                Opcje:
+                                <ul>
+                                    {% for choice in poll.choices %}
+                                        <li>{{ choice.name }} <small>({{ choice.description }})</small></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <i class="fa fa-calendar-alt" aria-hidden="true"></i> Do {{ poll.closesOnDate }} <br/>
+                        </div>
+                        <div>
+                            <div class="m-2"><a href="/admin/editpoll?id={{ poll.id }}"><i class="fas fa-edit"></i> Edycja</a></div>
+                            <div class="m-2"><a href="/admin/sendout?id={{ poll.id }}"><i class="fas fa-mail-bulk"></i> Rozsyłka maili</a></div>
+                            <div class="m-2"><a href="/admin/results?id={{ poll.id }}"><i class="fas fa-poll"></i> Wyniki</a></div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ol>
+        </div>
+    {% else %}
+        <div class="col-md-12">
+            Nie posiadasz dostępu do żadnych głosowań. Aby to zmienić, możesz <a href="/admin/addpoll">stworzyć nowe głosowanie</a>.
+        </div>
+    {% endif %}
+
+{% endblock %}

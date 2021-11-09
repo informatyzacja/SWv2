@@ -20,10 +20,7 @@ import psycopg2.extras
 psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
 psycopg2.extensions.register_adapter(list, psycopg2.extras.Json)
 
-
-
 # setup g.db as postgres
-DATABASE = 'database.db'
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
@@ -73,6 +70,14 @@ def load_user(user_id):
 def unauthorized():
     return redirect('/admin/login', code=303)
 
+# Make redirects use "Location: /admin/login" instead
+# of "Location: http://localhost/admin/login" so python
+# doesn't have to know the hostname and port.
+@app.after_request
+def dont_make_location_header_relative(response):
+    response.autocorrect_location_header = False
+    return response
+
 @app.route('/admin/login', methods=['GET'])
 def admin_login():
     if current_user.is_authenticated:
@@ -110,7 +115,7 @@ def admin_polls():
             'choiceType': voting[3],
             'visibility': voting[4],
             'closesOnDate': voting[5]
-        } for voting in query_db('select id, name, options, choice_type, visibility, closes_on_date from polls where owner_user=%s',
+        } for voting in query_db('select id, name, options, choice_type, visibility, closes_on_date from polls where owner_user=%s order by id',
                                  [int(current_user.get_id())]))
     return render_template('polls.html', polls=polls)
 
@@ -149,9 +154,10 @@ def admin_editpoll():
         return "Głosowanie nie istnieje", 400
     name, options, choice_type, possible_recipients, sending_out_to, closes_on_date, mail_template = row
     sending_out_to_amount = len(sending_out_to)
+    should_disable = "disabled" if sending_out_to_amount > 0 else ""
     return render_template('editpoll.html', poll_id=poll_id, name=name, options=options, choice_type=choice_type,
                             possible_recipients=possible_recipients, sending_out_to_amount=sending_out_to_amount,
-                            closes_on_date=closes_on_date, mail_template=mail_template)
+                            closes_on_date=closes_on_date, mail_template=mail_template, should_disable=should_disable)
 
 @app.route('/admin/editpoll', methods=['POST'])
 @login_required
@@ -161,7 +167,7 @@ def admin_editpoll_post():
                                         [poll_id, int(current_user.get_id())])
 
     if len(sending_out_to) == 0:
-        db_execute('update polls set name=%s, options=%s, choice_type=%s, visibility=%s, possible_recipients=%s, closes_on_date=%s \
+        db_execute('update polls set name=%s, options=%s, choice_type=%s, visibility=%s, possible_recipients=%s, closes_on_date=%s, mail_template=%s \
                     where id=%s and owner_user=%s', [
                 request.form['name'],
                 json.loads(request.form['options']),
@@ -169,6 +175,7 @@ def admin_editpoll_post():
                 request.form['visibility'],
                 json.loads(request.form['recipients']),
                 request.form['closesOnDate'],
+                request.form['mailTemplate'],
                 poll_id,
                 int(current_user.get_id())
             ])
@@ -227,7 +234,7 @@ def admin_sendout_queueall_post():
     db_execute('update polls \
                 set sending_out_to=(select possible_recipients from polls where id=%s and owner_user=%s) \
                 where id=%s and owner_user=%s',
-                [poll_id, int(current_user.get_id()), poll_id. int(current_user.get_id())])
+                [poll_id, int(current_user.get_id()), poll_id, int(current_user.get_id())])
     get_db().commit()
 
     return redirect('/admin/sendout?id=' + str(poll_id), code=303)
@@ -271,7 +278,7 @@ def result_getter(poll_id):
         result = result.decode('utf8').strip()
         option, count = result.split(' ', 2)
         results_dict[option] = int(count)
-    return lambda i: results_dict[f"option_{i}"]
+    return lambda i: 0 if f"option_{i}" not in results_dict else results_dict[f"option_{i}"]
 
 @app.route('/admin/results', methods=['GET'])
 @login_required

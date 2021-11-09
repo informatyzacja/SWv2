@@ -5,6 +5,10 @@ import sqlite3
 import json
 import psycopg2
 import config
+import smtplib
+import time
+from email.mime.text import MIMEText
+from email.header import Header
 
 db = psycopg2.connect(host=config.DATABASE_HOST, database=config.DATABASE_DB, user=config.DATABASE_USER, password=config.DATABASE_PW)
 
@@ -13,13 +17,13 @@ import psycopg2.extras
 psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
 psycopg2.extensions.register_adapter(list, psycopg2.extras.Json)
 
-def query_db(query, args=()):                                                                                                              
-    with db, db.cursor() as cursor:                                                                                                    
-        cursor.execute(query, args)                                                                                                        
-        return cursor.fetchall()                                                                                                           
-def query_db_one(query, args=()):                                                                                                          
-    with db, db.cursor() as cursor:                                                                                                    
-        cursor.execute(query, args)                                                                                                        
+def query_db(query, args=()):
+    with db, db.cursor() as cursor:
+        cursor.execute(query, args)
+        return cursor.fetchall()
+def query_db_one(query, args=()):
+    with db, db.cursor() as cursor:
+        cursor.execute(query, args)
         return cursor.fetchone()
 def db_execute(query, args=()):
     with db, db.cursor() as cursor:
@@ -51,20 +55,43 @@ def add_to_sent_to(poll_id, email):
     sent_to += [email]
     db_execute('update polls set sent_to=%s where id=%s', [sent_to, poll_id])
 
+# Should return a Header representing '=?utf-8?q?System_Wyborczy_Samorz=C4=85du_Studenckiego_PWr?=\n <informatyzacja@samorzad.pwr.edu.pl>' 
+def header_from():
+    us = Header(config.SMTP_FROM_NAME, 'utf-8')
+    us.append(f"<{config.SMTP_FROM_ADDR}>", 'ascii')
+    return us
+
+def header_to(addr):
+    them = Header('Anonimowy głosujący', 'utf-8')
+    them.append(f"<{addr}>", 'ascii')
+    return them
+
 def send_email(address, subject, content):
-    print(f"Email to {address} with subject \"{subject}\":\n{content}")
+    print(f"Sending an email message to {address} with subject \"{subject}\": {content}")
+    message = MIMEText(content, 'html', 'utf-8')
+    message['From'] = header_from()
+    message['Subject'] = subject
+    message['To'] = header_to(address)
+    with smtplib.SMTP(config.SMTP_HOST, config.SMTP_PORT, timeout=15) as smtp:
+        smtp.starttls()
+        smtp.login(config.SMTP_LOGIN, config.SMTP_PW)
+        smtp.sendmail(config.SMTP_FROM_ADDR, [address], message.as_string())
 
 def send_one_email(poll_id, email_address, name, mail_template, closes_on_date):
     # todo: check if it's already sent in postfix (if that's possible)
     link = make_a_href(poll_id)
     mail = mail_template
+    mail = mail.replace('\r\n', '<br/>')
+    mail = mail.replace('\n', '<br/>')
     mail = mail.replace('{name}', name)
     mail = mail.replace('{date_to}', closes_on_date)
     mail = mail.replace('{link}', link)
-    send_email(email_address, "System Wyborczy Samorządu Studenckiego Politechniki Wrocławskiej", mail)
+    send_email(email_address, "Głosowanie w Systemie Wyborczym Samorządu Studenckiego Politechniki Wrocławskiej", mail)
 
 def send_one_email_in_poll(poll):
     poll_id, name, sending_out_to, sent_to, mail_template, closes_on_date = poll
+    print("Sending for poll: " + name)
+
     left_to_send = list_without(sending_out_to, sent_to)
     if len(left_to_send) == 0:
         return
@@ -82,4 +109,7 @@ def main():
         send_one_email_in_poll(poll)
 
 if __name__ == '__main__':
-    main()
+    print("Started py")
+    while True:
+        main()
+        time.sleep(0.5)
