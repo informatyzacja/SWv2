@@ -356,5 +356,9 @@ def admin_results():
                            voted_len=voted_len,
                            results=results)
 
+
+if __name__ == '__main__':
+    app.run()
+
 # TODO: sqlite BEGIN EXCLUSIVE TRANSACTION
 # TODO: noatime

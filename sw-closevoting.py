@@ -1,5 +1,7 @@
-from datetime import datetime
+import config
+import datetime
 import os
+import pytz
 import psycopg2
 import time
 
@@ -15,12 +17,14 @@ def query_db_all(query, args=()):
 
 def main():
     while True:
-        polls = query_db_all("""select id, closes_on_date, closed from polls """)
+        polls = query_db_all("""select id, closes_on_date, closed from sw.polls """)
         for poll in polls:
-            poll_close_date = datetime.strptime(poll[1], "%Y-%m-%dT%H:%M:%S.000Z")
-            now = datetime.now()
+            poll_id, poll_close_date, poll_closed = poll
+            now = datetime.datetime.now(tz=pytz.timezone("Europe/Warsaw"))
+            now = now.replace(tzinfo=None)
+            poll_id = int(poll_id)
             if poll_close_date < now:
-                os.unlink(f'/opt/sw/poll/{int(poll[0])}/index.html')
+                os.unlink(f'/opt/sw/poll/{poll_id}/index.html')
         time.sleep(60)
 
 
