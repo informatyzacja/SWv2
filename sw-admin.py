@@ -154,6 +154,13 @@ def admin_logout():
 @app.route('/admin/polls', methods=['GET'])
 @login_required
 def admin_polls():
+    votes = query_db_all(
+        """ select id, name, options, choice_type, visibility, closes_on_date
+            from polls
+            where owner_user=%s
+            order by id""",
+        [int(current_user.get_id())])
+
     polls = list({
                      'id': voting[0],
                      'name': voting[1],
@@ -161,9 +168,7 @@ def admin_polls():
                      'choiceType': voting[3],
                      'visibility': voting[4],
                      'closesOnDate': voting[5]
-                 } for voting in query_db_all(
-        'select id, name, options, choice_type, visibility, closes_on_date from polls where owner_user=%s order by id',
-        [int(current_user.get_id())]))
+                 } for voting in votes)
     return render_template('polls.html', polls=polls)
 
 
@@ -176,9 +181,9 @@ def admin_addpoll():
 @app.route('/admin/addpoll', methods=['POST'])
 @login_required
 def admin_addpoll_post():
-    db_execute('insert into polls(name, options, choice_type, visibility, possible_recipients, \
-                    closes_on_date, owner_user, sent_to, sending_out_to, mail_template) \
-                    values(%s,%s,%s,%s,%s,%s,%s,\'[]\',\'[]\',%s);',
+    db_execute("""insert into polls(name, options, choice_type, visibility, possible_recipients,
+                    closes_on_date, owner_user, sent_to, sending_out_to, mail_template)
+                    values(%s,%s,%s,%s,%s,%s,%s,\'[]\',\'[]\',%s);""",
                [
                    request.form['name'],
                    json.loads(request.form['options']),
@@ -198,8 +203,10 @@ def admin_addpoll_post():
 @login_required
 def admin_editpoll():
     poll_id = request.args.get('id')
-    row = query_db_one('select name, options, choice_type, possible_recipients, sending_out_to, closes_on_date, mail_template from polls\
-                        where id = %s and owner_user = %s', [poll_id, int(current_user.get_id())])
+    row = query_db_one("""  select name, options, choice_type, possible_recipients,
+                                sending_out_to, closes_on_date, mail_template
+                            from polls
+                            where id = %s and owner_user = %s""", [poll_id, int(current_user.get_id())])
     if not row:
         return "Głosowanie nie istnieje", 400
     name, options, choice_type, possible_recipients, sending_out_to, closes_on_date, mail_template = row
@@ -218,18 +225,20 @@ def admin_editpoll_post():
                                         [poll_id, int(current_user.get_id())])
 
     if len(sending_out_to) == 0:
-        db_execute('update polls set name=%s, options=%s, choice_type=%s, visibility=%s, possible_recipients=%s, closes_on_date=%s, mail_template=%s \
-                    where id=%s and owner_user=%s', [
-            request.form['name'],
-            json.loads(request.form['options']),
-            request.form['choiceType'],
-            request.form['visibility'],
-            json.loads(request.form['recipients']),
-            request.form['closesOnDate'],
-            request.form['mailTemplate'],
-            poll_id,
-            int(current_user.get_id())
-        ])
+        db_execute("""  update polls set name=%s, options=%s, choice_type=%s, visibility=%s,
+                            possible_recipients=%s, closes_on_date=%s, mail_template=%s
+                        where id=%s and owner_user=%s""",
+                   [
+                       request.form['name'],
+                       json.loads(request.form['options']),
+                       request.form['choiceType'],
+                       request.form['visibility'],
+                       json.loads(request.form['recipients']),
+                       request.form['closesOnDate'],
+                       request.form['mailTemplate'],
+                       poll_id,
+                       int(current_user.get_id())
+                   ])
         get_db().commit()
     else:
         flash("Nie można zedytować głosowania \"{}\" ponieważ rozsyłanie maili już się rozpoczęło".format(name))

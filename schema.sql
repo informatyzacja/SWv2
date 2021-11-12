@@ -15,7 +15,7 @@ create table polls(
     possible_recipients json, -- json array of strings (email addresses)
     sending_out_to json, -- json array of strings (email addresses)
     sent_to json, -- json array of strings (email addresses)
-    closes_on_date text,
+    closes_on_date timestamp,
     mailing_active boolean default false,
     owner_user integer references users(id),
     mail_template text
