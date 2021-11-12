@@ -17,7 +17,7 @@ def query_db_all(query, args=()):
 
 def main():
     while True:
-        polls = query_db_all("""select id, closes_on_date, closed from sw.polls """)
+        polls = query_db_all("""select id, closes_on_date, closed from polls """)
         for poll in polls:
             poll_id, poll_close_date, poll_closed = poll
             now = datetime.datetime.now(tz=pytz.timezone("Europe/Warsaw"))
