@@ -15,7 +15,7 @@ def query_db_all(query, args=()):
 
 def main():
     while True:
-        polls = query_db_all("""select id, closes_on_date from polls """)
+        polls = query_db_all("""select id, closes_on_date, closed from polls """)
         for poll in polls:
             poll_close_date = datetime.strptime(poll[1], "%Y-%m-%dT%H:%M:%S.000Z")
             now = datetime.now()
