@@ -17,10 +17,10 @@ def main():
     while True:
         polls = query_db_all("""select id, closes_on_date from polls """)
         for poll in polls:
-            poll_close_date = poll[1]
+            poll_close_date = datetime.strptime(poll[1], "%Y-%m-%dT%H:%M:%S.000Z")
             now = datetime.now()
             if poll_close_date < now:
-                os.unlink(f'/opt/sw/poll/{id_glosowania}/index.html')
+                os.unlink(f'/opt/sw/poll/{int(poll[0])}/index.html')
         time.sleep(60)
 
 
