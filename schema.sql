@@ -18,5 +18,8 @@ create table polls(
     closes_on_date text,
     mailing_active boolean default false,
     owner_user integer references users(id),
-    mail_template text
+    mail_template text,
+    max_choices integer default 1,
+    description text default '',
+    closed boolean default false
 );

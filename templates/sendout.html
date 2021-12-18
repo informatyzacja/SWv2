@@ -3,29 +3,69 @@
 {% block content %}
 <div class="row">
     <div class="col-md-12">
-        <h3>Rozsyłka maili dla głosowania "{{name}}".</h3>
+        <h3>Rozsyłka maili dla głosowania "{{name}}"</h3>
 
-        <div class="card mt-4">
-            <div class="card-body">
-                <div class="d-flex justify-content-left align-items-center">
-                    {% if mailing_active %}
-                        <div class="m-2">
-                            <button class="btn btn-danger" onclick="sendForm('sendout/deactivatemailing?id={{ id }}', {})">Deaktywuj</button>
-                        </div>
-                        <div class="ms-3">
-                            Rozsyłanie maili z "do wysłania" jest aktywne. Maile z "do wysłania" są rozsyłane do odbiorców, przechodząc do "wysłano do". 
-                        </div>
-                    {% else %}
-                        <div class="m-2">
-                            <button class="btn btn-danger" onclick="sendForm('sendout/activatemailing?id={{ id }}', {})">Aktywuj</button>
-                        </div>
-                        <div class="ms-3">
-                            Rozsyłanie maili z "do wysłania" nie jest aktywne. Maile z "do wysłania" nie będą wysyłane. Naciśnięcie przycisku "Aktywuj" rozpocznie rozsyłkę maili.
-                        </div>
-                    {% endif %}
+        {% if planned_start_sending and not mailing_active %}
+            <div class="card mt-4">
+                <div class="card-body">
+                        <form action="/admin/sendout/unplan?id={{ id }}" method="POST" class="m-2 d-flex flex-row justify-content-left align-items-center">
+                                <div>
+                                    <button type="submit" class="me-2 btn btn-warning"><i class="fas fa-ban"></i> Anuluj&nbsp;zaplanowaną&nbsp;wysyłkę</button>
+                                </div>
+                                <div class="mx-3">
+                                    Rozpoczęcie wysyłki maili jest zaplanowane na <b>{{ planned_start_sending }}</b>. Od tego momentu maile z "Do wysłania" będą wysyłane, przechodząc do "Wysłano do".
+                                </div>
+                        </form>
                 </div>
             </div>
-        </div>
+        {% else %}
+            {% if not mailing_active and not closed %}
+                <div class="card mt-4">
+                    <div class="card-body">
+                            <form action="/admin/sendout/plan?id={{ id }}" method="POST" class="m-2 d-flex flex-row justify-content-left align-items-center">
+                                    <div>
+                                        <button type="submit" class="me-2 btn btn-warning" onclick=false><i class="fas fa-clock"></i> Zaplanuj&nbsp;wysyłkę</button>
+                                    </div>
+                                    <div class="mx-2">
+                                        <input type="date" class="form-control mx-2" id="planSendoutDate" name="planSendoutDate">
+                                    </div>
+                                    <div class="mx-2">
+                                        <input type="time" class="form-control mx-2" id="planSendoutTime" name="planSendoutTime">
+                                    </div>
+                                    <div class="mx-3">
+                                        Zaplanowanie wysyłki spowoduje to samo co naciśnięcie przycisku "Aktywuj teraz" o wybranej godzinie. Aby rozsyłka się wtedy rozpoczęła, odbiorcy muszą być w kolumnie "Do wysłania".
+                                    </div>
+                            </form>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-left align-items-center">
+                        {% if mailing_active %}
+                            <div class="m-2">
+                                <button class="btn btn-danger" onclick="sendForm('sendout/deactivatemailing?id={{ id }}', {})">Deaktywuj</button>
+                            </div>
+                            <div class="ms-3">
+                                Rozsyłanie maili z "do wysłania" jest aktywne. Maile z "do wysłania" są rozsyłane do odbiorców, przechodząc do "wysłano do". 
+                            </div>
+                        {% elif closed %}
+                            <div class="ms-3">
+                                Rozpoczęcie rozsyłki maili w tym głosowaniu nie jest możliwe ponieważ już się ono zakończyło
+                            </div>
+                        {% else %}
+                            <div class="m-2">
+                                <button class="btn btn-danger" onclick="if(confirm('Czy na pewno chcesz natychmiastowo rozpocząć wysyłkę maili z &quot;Do wysłania&quot;?')) sendForm('sendout/activatemailing?id={{ id }}', {})">Aktywuj&nbsp;teraz</button>
+                            </div>
+                            <div class="ms-3">
+                                Rozsyłanie maili z "do wysłania" nie jest aktywne. Maile z "do wysłania" nie będą wysyłane. Naciśnięcie przycisku "Aktywuj teraz" rozpocznie natychmiastowo rozsyłkę maili.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
 
         <div class="container">
             <div class="row">

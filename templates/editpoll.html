@@ -9,9 +9,9 @@
             </div>
         {% endif %}
 
-        <h3 class="mb-5">Edycja głosowania "{{name}}"</h3>
+        <h3 class="mb-5">{% block header %}Edycja głosowania "{{name}}"{% endblock %}</h3>
 
-        Nazwa głosowania: <input type="text" class="form-control" id="pollName" placeholder="Wybory na prezydenta Rzeczypospolitej Polskiej" value="{{name}}" {{should_disable}}> <br /> <br />
+        Nazwa głosowania: <input type="text" class="form-control" id="pollName" placeholder="Wybory na prezydenta Rzeczypospolitej Polskiej" value="{% block newpollname %}{{name}}{% endblock %}" {{should_disable}}> <br /> <br />
         Opcje do wyboru:
         <div class="card">
             <div class="card-body">
@@ -38,6 +38,13 @@
                 </table>
             </div>
         </div>
+        <br /> 
+        <div class="d-flex justify-content-left align-items-center">
+            Na ile opcji jedna osoba może maksymalnie zagłosować:
+            <div class="col-md-2 ms-2">
+                <input type="number" class="form-control" id="pollMaxChoices" value="{{ max_choices }}" {{should_disable}}>
+            </div>
+        </div>
         <br /> <br />
 
         Głosujacy (adresy email w nowych liniach): <br/>
@@ -54,10 +61,14 @@
         </div>
         <br /> <br />
 
+        Opis głosowania (pozostaw puste aby nie wyświetlać opisu): <br />
+        <textarea id="pollDescription" rows=7 cols=90 class="form-control" {{should_disable}}>{{ description }}</textarea>
+
+        <br /> <br />
         Treść maila:<br/>
         <textarea id="pollMailTemplate" rows=37 cols=90 class="form-control" {{should_disable}}>{{ mail_template }}</textarea>
        
-        <input type="submit" class="btn btn-success my-4 float-end" value="Zapisz głosowanie" onclick="send()" {{should_disable}}>
+        <input type="submit" class="btn btn-success my-4 float-end" value="{% block sendbuttontext %}Zapisz głosowanie{% endblock %}" onclick="send()" {{should_disable}}>
     </div>
 </div>
 
@@ -80,7 +91,7 @@
         function sendForm(data) {
             let form = document.createElement('form');
             form.method = "POST";
-            form.action = "?id={{poll_id}}";
+            form.action = "{% block formactionpath %}?id={{poll_id}}{% endblock %}";
             form.style.display = 'none';
             for(let attrname in data) {
                 let inp = document.createElement('input');
@@ -106,7 +117,9 @@
                 recipients: JSON.stringify(pollRecipients.value.split('\n').filter(email => email.length != 0).map(email => email.trim())),
                 closesOnDate: val('pollClosesOnDate') + ' ' + val('pollClosesOnTime'),
                 visibility: 'private',
-                mailTemplate: val('pollMailTemplate')
+                mailTemplate: val('pollMailTemplate'),
+                maxChoices: val('pollMaxChoices'),
+                description: val('pollDescription')
             }
             sendForm(data)
         }

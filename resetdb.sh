@@ -17,4 +17,4 @@ sudo -u postgres psql sw -c 'GRANT ALL PRIVILEGES ON users TO sw;'
 sudo -u postgres psql sw -c 'GRANT ALL PRIVILEGES ON polls_id_seq TO sw;'
 sudo -u postgres psql sw -c 'GRANT ALL PRIVILEGES ON users_id_seq TO sw;'
 
-./sw-create-user.py admin passwords
+./sw-create-user.py admin haker7

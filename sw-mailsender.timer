@@ -1,0 +1,9 @@
+[Unit]
+Description=SW mailsender - timer
+
+[Timer]
+OnUnitInactiveSec=10s
+OnBootSec=10s
+
+[Install]
+WantedBy=timers.target

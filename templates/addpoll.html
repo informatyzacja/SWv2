@@ -26,7 +26,16 @@
                 </table>
             </div>
         </div>
-        <br /> <br />
+        <br /> 
+
+        <div class="d-flex justify-content-left align-items-center">
+            Na ile opcji jedna osoba może maksymalnie zagłosować:
+            <div class="col-md-2 ms-2">
+                 <input type="number" class="form-control" id="pollMaxChoices" value="1">
+            </div>
+        </div>
+        <br /> 
+        <br /> 
 
         Głosujacy (adresy email w nowych liniach): <br/>
         <textarea class="form-control" id="pollRecipients" placeholder="1@student.pwr.edu.pl&#10;2@student.pwr.edu.pl&#10;..." rows=10></textarea>
@@ -40,7 +49,15 @@
                 <input type="time" class="form-control" id="pollClosesOnTime">
             </div>
         </div>
+
+
         <br /> <br />
+
+        Opis głosowania (pozostaw puste aby nie wyświetlać opisu): <br />
+        <textarea id="pollDescription" rows=7 cols=90 class="form-control"></textarea>
+        <br /> <br />
+
+
 
         Treść maila:<br/>
         <textarea id="pollMailTemplate" rows=37 cols=90 class="form-control">
@@ -129,7 +146,9 @@ The Students Electoral Commission of Wrocław University of Science and Technolo
             recipients: JSON.stringify(pollRecipients.value.split('\n').filter(email => email.length != 0).map(email => email.trim())),
             closesOnDate: val('pollClosesOnDate') + ' ' + val('pollClosesOnTime'),
             visibility: 'private',
-            mailTemplate: val('pollMailTemplate')
+            mailTemplate: val('pollMailTemplate'),
+            maxChoices: val('pollMaxChoices'),
+            description: val('pollDescription')
         }
         sendForm(data)
     }

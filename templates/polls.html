@@ -1,6 +1,7 @@
 {% extends "baseloggedin.html" %}
 {% block title %}Lista głosowań{% endblock %}
-{% block active_poll_list %}active{% endblock %}
+{% block active_closed_poll_list %}{% if closed %}active{% endif %}{% endblock %}
+{% block active_poll_list %}{% if not closed %}active{% endif %}{% endblock %}
 {% block content %}
     <!-- Miejsce na błędy, na przykład "nie można edytować głosowania ponieważ wiadomości zostały już rozesłane -->
     {% with messages = get_flashed_messages() %}
@@ -15,7 +16,11 @@
 
 
     <div class="col-md-12">
-        <h3 class="my-4">Lista głosowań do których masz dostęp</h3>
+        {% if closed %}
+            <h3 class="my-4">Lista zakończonych głosowań do których masz dostęp</h3>
+        {% else %}
+            <h3 class="my-4">Lista aktywnych głosowań do których masz dostęp</h3>
+        {% endif %}
     </div>
 
     {% if polls|length > 0 %}
@@ -29,7 +34,7 @@
                                 Opcje:
                                 <ul>
                                     {% for choice in poll.choices %}
-                                        <li>{{ choice.name }} <small>({{ choice.description }})</small></li>
+                                        <li>{{ choice.name }} {% if choice.description|length > 0 %}<small>({{ choice.description }})</small>{% endif %}</li>
                                     {% endfor %}
                                 </ul>
                             </div>
@@ -37,6 +42,8 @@
                         </div>
                         <div>
                             <div class="m-2"><a href="/admin/editpoll?id={{ poll.id }}"><i class="fas fa-edit"></i> Edycja</a></div>
+                            <div class="m-2"><a href="/admin/copypoll?id={{ poll.id }}"><i class="fas fa-copy"></i> Duplikuj</a></div>
+                            <div class="m-2"><a href="/admin/peek?id={{ poll.id }}"><i class="fas fa-eye"></i> Podgląd strony dla głosującego</a></div>
                             <div class="m-2"><a href="/admin/sendout?id={{ poll.id }}"><i class="fas fa-mail-bulk"></i> Rozsyłka maili</a></div>
                             <div class="m-2"><a href="/admin/results?id={{ poll.id }}"><i class="fas fa-poll"></i> Wyniki</a></div>
                         </div>
