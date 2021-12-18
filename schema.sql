@@ -21,5 +21,6 @@ create table polls(
     mail_template text,
     max_choices integer default 1,
     description text default '',
-    closed boolean default false
+    closed boolean default false,
+    planned_start_sending timestamp with time zone
 );
