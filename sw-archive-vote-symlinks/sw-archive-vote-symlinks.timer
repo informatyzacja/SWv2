@@ -1,0 +1,11 @@
+[Unit]
+Description=Timer for sw-archive-vote-symlinks
+Requires=sw-archive-vote-symlinks.service
+
+[Timer]
+Persistent=true
+# every 5 minutes
+OnCalendar=*:0/5
+
+[Install]
+WantedBy=timers.target

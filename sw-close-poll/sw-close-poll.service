@@ -1,0 +1,17 @@
+[Unit]
+Description=sw-close-poll
+
+[Service]
+Restart=always
+RestartSec=3s
+
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/sw/sw-close-poll
+ExecStart=/usr/bin/python3 -u /opt/sw/sw-close-poll/sw_close_poll.py
+StandardOutput=journal
+Type=simple
+SyslogIdentifier=sw-close-poll
+
+[Install]
+WantedBy=multi-user.target

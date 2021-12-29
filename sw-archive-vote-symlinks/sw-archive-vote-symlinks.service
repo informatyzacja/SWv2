@@ -1,0 +1,11 @@
+[Unit]
+Description=sw-archive-vote-symlinks
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/sw/sw-archive-vote-symlinks
+ExecStart=/opt/sw/sw-archive-vote-symlinks/sw-archive-vote-symlinks.sh
+StandardOutput=journal
+SyslogIdentifier=sw-archive-vote-symlinks
+
+# No [Install] section - this service is started by sw-archive-vote-symlinks.timer

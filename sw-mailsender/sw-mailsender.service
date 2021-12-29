@@ -1,0 +1,17 @@
+[Unit]
+Description=SW mailsender
+
+[Service]
+Restart=always
+RestartSec=3s
+
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/sw/sw-mailsender
+ExecStart=/usr/bin/python3 -u /opt/sw/sw-mailsender/sw_mailsender.py
+StandardOutput=journal
+Type=simple
+SyslogIdentifier=sw-mailsender
+
+[Install]
+WantedBy=multi-user.target

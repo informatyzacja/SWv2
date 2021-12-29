@@ -1,0 +1,17 @@
+[Unit]
+Description=SW start mailing
+
+[Service]
+Restart=always
+RestartSec=3s
+
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/sw/sw-start-planned-mailing
+ExecStart=/usr/bin/python3 -u /opt/sw/sw-start-planned-mailing/sw_start_planned_mailing.py
+StandardOutput=journal
+Type=simple
+SyslogIdentifier=sw-start-planned-mailing
+
+[Install]
+WantedBy=multi-user.target

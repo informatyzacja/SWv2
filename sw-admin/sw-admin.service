@@ -1,0 +1,19 @@
+[Unit]
+Description=System Wyborczy - admin panel gunicorn
+After=network.target
+ 
+[Service]
+Restart=always
+RestartSec=3s
+
+Type=notify
+User=www-data
+Group=www-data
+Environment="PYTHONUNBUFFERED=1"
+WorkingDirectory=/opt/sw/sw-admin
+ExecStart=/usr/bin/gunicorn --enable-stdio-inheritance --workers 3 --bind unix:/run/sw-admin.sock sw_admin:app
+ExecReload=/bin/kill -s HUP $MAINPID
+SyslogIdentifier=sw-admin
+
+[Install]
+WantedBy=multi-user.target
