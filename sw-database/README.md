@@ -1,6 +1,10 @@
 # Opis bazy danych 
 
-System Wyborczy używa PostgreSQL jako bazy danych. Schema znajduje się w pliku [schema.sql](./schema.sql).
+System Wyborczy używa PostgreSQL jako bazy danych. 
+
+## Schemat bazy danych
+
+Schemat bazy danych razem z komentarzami znajduje się w pliku [**`schema.sql`**](./schema.sql).
 
 ## W jaki sposób mogę otworzyć konsolę Postgresa?
 
