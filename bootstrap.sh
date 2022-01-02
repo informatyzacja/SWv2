@@ -1,4 +1,11 @@
 #!/bin/bash
+
+#
+# Skrypt ustawiający maszynę wirtualną wirtualną przez Vagranta przy `vagrant up`
+# można go uruchamiać z shella `vagrant ssh`, aby przeładować wszystko - jest to
+# przydatne przy modyfikacji plików dla systemd: .service, .timer i .socket
+#
+
 set -xeu
 shopt -s nullglob
 
