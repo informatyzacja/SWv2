@@ -1,4 +1,4 @@
-# Opis bazy danych 
+# Opis bazy danych  <img src="../static/logo-with-embedded-font/logo-simple.svg" align="right" height="42px" width="42px">
 
 System Wyborczy używa PostgreSQL jako bazy danych. 
 

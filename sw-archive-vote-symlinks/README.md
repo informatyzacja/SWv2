@@ -1,4 +1,4 @@
-# sw-archive-vote-symlinks
+# sw-archive-vote-symlinks <img src="../static/logo-with-embedded-font/logo-simple.svg" align="right" height="42px" width="42px">
 
 Skrypt archiwizujący tokeny z `/opt/sw/v/` które pokazują na głosowania które się już zakończyły - czyli nie są dowiązaniami symbolicznymi pokazującymi na głosowania które posiadają `index.html`.
 

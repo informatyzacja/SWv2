@@ -1,4 +1,4 @@
-# sw-mailsender
+# sw-mailsender <img src="../static/logo-with-embedded-font/logo-simple.svg" align="right" height="42px" width="42px">
 
 `sw-mailsender` tworzy tokeny oraz wysyła maile dla głosowań.
 

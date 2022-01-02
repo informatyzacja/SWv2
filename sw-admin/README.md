@@ -1,4 +1,4 @@
-# sw-admin
+# sw-admin <img src="../static/logo-with-embedded-font/logo-simple.svg" align="right" height="42px" width="42px">
 
 
 `sw-admin` jest backendem w napisanym w Pythonie z wykorzystaniem frameworka Flask, który odpowiada za podstrony `/admin` w SW.
