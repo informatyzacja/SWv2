@@ -16,6 +16,12 @@ Wykonanie tych komend stworzy maszynę wirtualną w której będą włączone ws
 
 Po wykonaniu strona administratora powinna być dostępna na [http://localhost:8080/admin](http://localhost:8080/admin), z loginem `admin` i hasłem `haker7`, a komenda `vagrant ssh` powinna otworzyć shell na maszynie wirtualnej.
 
+Aby wyłączyć maszynę wirtualną po skończeniu pracy można wykonać:
+
+```bash
+$ vagrant halt
+```
+
 ## Logi i status
 
 
