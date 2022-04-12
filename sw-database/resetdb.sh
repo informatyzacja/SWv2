@@ -4,6 +4,7 @@ set -e
 cd /opt/sw/sw-database
 
 sudo -u postgres psql -c "
+    \\set AUTOCOMMIT on
     CREATE USER sw WITH PASSWORD 'pw';
     CREATE DATABASE sw WITH OWNER = sw;" || true
 
