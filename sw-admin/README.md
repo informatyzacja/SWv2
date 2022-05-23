@@ -1,4 +1,4 @@
-# sw-admin <img src="../static/logo-with-embedded-font/logo-simple.svg" align="right" height="42px" width="42px">
+# sw-admin <img src="../static/logo-with-embedded-font/logo-simple.png" align="right" height="42px" width="42px">
 
 
 `sw-admin` jest backendem w napisanym w Pythonie z wykorzystaniem frameworka Flask, który odpowiada za podstrony `/admin` w SW.
@@ -9,7 +9,7 @@ Katalog `templates/` zawiera kod HTML dla każdej podstrony. Wykożystane są do
 
 ## Interakcja z resztą systemu
 
-![Interakcje z resztą systemu](.screenshots/sw-admin-interakcje.svg)
+![Interakcje z resztą systemu](.screenshots/sw-admin-interakcje.png)
 
 ## Zaimplementowane funkcjonalności
 
@@ -266,9 +266,9 @@ Jakie adresy email znajdują się na listach w interfejsie:
 
 | Lista | Adres znajduje się w `possible_recipients` | Adres znajduje się w `sending_out_to` | Adres znajduje się w `sent_to` |
 :-------------------------------------:|:---:|:---:|:----:
-| ![](.screenshots/sendout-list-1.png) | :heavy_check_mark: | :x: | :x: |
-| ![](.screenshots/sendout-list-2.png) | :heavy_check_mark: | :heavy_check_mark: | :x: |
-| ![](.screenshots/sendout-list-3.png) | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| ![](.screenshots/sendout-list-1.png) | nie | tak | tak |
+| ![](.screenshots/sendout-list-2.png) | nie | nie | tak |
+| ![](.screenshots/sendout-list-3.png) | nie | nie | nie |
 
 Dla klaryfikacji tabelki: w "Wysłano do" wyświetlają się adresy które są we wszystkich trzech tablicach, a w "Jeszcze nie wysłane" adresy które są jedynie w `possible_recipients`.
 

@@ -1,4 +1,4 @@
-# sw-archive-vote-symlinks <img src="../static/logo-with-embedded-font/logo-simple.svg" align="right" height="42px" width="42px">
+# sw-archive-vote-symlinks <img src="../static/logo-with-embedded-font/logo-simple.png" align="right" height="42px" width="42px">
 
 Skrypt archiwizujący tokeny z `/opt/sw/v/` które pokazują na głosowania które się już zakończyły - czyli nie są dowiązaniami symbolicznymi pokazującymi na głosowania które posiadają `index.html`.
 
@@ -10,4 +10,4 @@ Ponieważ listowanie plików w katalogu robi się wolne z dużą ilością plik�
 
 ## Interakcje z resztą systemu
 
-![](.images/interactions-sw-archive-vote-symlinks.svg)
+![](.images/interactions-sw-archive-vote-symlinks.png)

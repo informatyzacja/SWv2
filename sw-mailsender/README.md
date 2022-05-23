@@ -1,4 +1,4 @@
-# sw-mailsender <img src="../static/logo-with-embedded-font/logo-simple.svg" align="right" height="42px" width="42px">
+# sw-mailsender <img src="../static/logo-with-embedded-font/logo-simple.png" align="right" height="42px" width="42px">
 
 `sw-mailsender` tworzy tokeny oraz wysyła maile dla głosowań.
 
@@ -15,4 +15,4 @@ Dla tych głosowań prędkością około 3.5 maila/sekundę (łącznie dla wszys
 
 ## Interakcja z resztą systemu
 
-![](.images/interactions-sw-mailsender.svg)
+![](.images/interactions-sw-mailsender.png)

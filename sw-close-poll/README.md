@@ -1,4 +1,4 @@
-# sw-close-poll <img src="../static/logo-with-embedded-font/logo-simple.svg" align="right" height="42px" width="42px">
+# sw-close-poll <img src="../static/logo-with-embedded-font/logo-simple.png" align="right" height="42px" width="42px">
 
 Skrypt zamyka głosowanie po nastaniu godziny zakończenia głosowania, poprzez:
 
@@ -13,4 +13,4 @@ Skrypt zamyka głosowanie po nastaniu godziny zakończenia głosowania, poprzez:
 
 ## Interakcja z resztą systemu
 
-![](.images/sw-close-poll-interactions.svg)
+![](.images/sw-close-poll-interactions.png)
