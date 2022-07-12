@@ -5,6 +5,13 @@
 <div class="row">
     <div class="col-md-12">
         <h3 class="mb-5">Dodawanie nowego głosowania</h3>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
         Nazwa głosowania: <input type="text" class="form-control" id="pollName" placeholder="Wybory na prezydenta Rzeczypospolitej Polskiej"> <br /> <br />
         Opcje do wyboru:

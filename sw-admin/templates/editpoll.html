@@ -10,6 +10,13 @@
         {% endif %}
 
         <h3 class="mb-5">{% block header %}Edycja głosowania "{{name}}"{% endblock %}</h3>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
         Nazwa głosowania: <input type="text" class="form-control" id="pollName" placeholder="Wybory na prezydenta Rzeczypospolitej Polskiej" value="{% block newpollname %}{{name}}{% endblock %}" {{should_disable}}> <br /> <br />
         Opcje do wyboru:

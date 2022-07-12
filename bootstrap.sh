@@ -89,4 +89,9 @@ make-script sw-logs "journalctl -e -b $(printf -- '-u %q"*" ' "${extra_services[
 make-script sw-status "systemctl status -l --no-pager --lines=100 $(printf '%q ' "${all_services[@]}")"
 make-script sw-restart "systemctl reset-failed $(printf '%q ' "${all_services[@]}"); systemctl restart $(printf '%q ' "${all_services[@]}")"
 
+# Mount runtime directories as tmpfs so this works when ran on windows
+for dir in /opt/sw/{poll,v,v-archive,logs}; do
+  mount -t tmpfs tmpfs "$dir" &
+done
+
 wait

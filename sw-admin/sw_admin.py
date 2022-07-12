@@ -1,5 +1,7 @@
+import wtforms
 from flask import Flask, request, jsonify, g, render_template, redirect, flash, make_response
 from flask_login import LoginManager, login_required, current_user, login_user, logout_user
+from wtforms import Form, StringField, validators,DecimalField
 import psycopg2
 import json
 import dateutil.parser
@@ -9,6 +11,7 @@ import pathlib
 import bcrypt
 import subprocess
 import sys
+from datetime import datetime
 
 # import ../config.py
 sys.path.append('..')
@@ -65,6 +68,51 @@ class User:
         self.is_anonymous = False
     def get_id(self):
         return self.user_id
+
+# Form for data validation with wtforms
+class PollForm(Form):
+    name = StringField('name', [validators.input_required(message="Nazwa głosowania nie może być pusta!")])
+    options = StringField('options')
+    recipients = StringField('recipients')
+    closesOnDate = StringField('closesOnDate')
+    mailTemplate = StringField('mailTemplate', [validators.input_required(message="Treść maila nie może być pusta!")])
+    maxChoices = DecimalField('maxChoices', [validators.input_required(message="Ilość opcji do wyboru nie może być pusta!"),validators.number_range(min=1,message="Ilość opcji do wyboru musi być równa conajmniej 1!")])
+
+    def validate_closesOnDate(form, field):
+        if (not field.data) or (field.data == " "):
+            raise wtforms.ValidationError(f"Data zakończenia głosowania jest niepoprawna!")
+        else:
+            print("Data #"+field.data+"#")
+
+        # Date and time on VM must be correct for this to work
+        t1=datetime.strptime(field.data,"%Y-%m-%d %H:%M")
+        t2=datetime.now()
+        delta=t1-t2
+        if delta.total_seconds()<0:
+            raise wtforms.ValidationError(f"Data zakończenia głosowania jest niepoprawna, głosowanie nie może zakończyć się przed rozpoczęciem!")
+
+    def validate_recipients(form, field):
+        try:
+            mails = json.loads(field.data)
+        except TypeError:
+            raise wtforms.ValidationError("Pole z adresami e-mail głosujących jest nie może być puste!")
+        if not mails:
+            raise wtforms.ValidationError("Pole z adresami e-mail głosujących jest nie może być puste!")
+
+    def validate_options(form, field):
+        if not field.data:
+            raise wtforms.ValidationError('Część lub całość opcji do wyboru jest niepoprawna!')
+        options=json.loads(field.data)
+        if not options:
+            raise wtforms.ValidationError('Część lub całość opcji do wyboru jest niepoprawna!')
+        for option in options:
+            for value in option.values():
+                if not value:
+                    raise wtforms.ValidationError('Część lub całość opcji do wyboru jest niepoprawna!')
+            for key in option.keys():
+                if not key:
+                    raise wtforms.ValidationError('Część lub całość opcji do wyboru jest niepoprawna!')
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -146,6 +194,15 @@ def admin_addpoll():
 @app.route('/admin/addpoll', methods=['POST'])
 @login_required
 def admin_addpoll_post():
+
+    #Input validation
+    form = PollForm(request.form)
+    if not form.validate():
+        for field, messages in form.errors.items():
+            for err in messages:
+                flash(err, category='danger')
+        return render_template('addpoll.html')
+
     db_execute('insert into polls(name, options, choice_type, visibility, possible_recipients, \
                     closes_on_date, owner_user, sent_to, sending_out_to, mail_template, max_choices, description) \
                     values(%s,%s,%s,%s,%s,%s,%s,\'[]\',\'[]\',%s,%s,%s);',
@@ -199,10 +256,26 @@ def admin_editpoll():
 @login_required
 def admin_editpoll_post():
     poll_id = int(request.args.get('id'))
-    name, sending_out_to, closed = query_db_one('select name, sending_out_to, closed from polls where id=%s and owner_user=%s',
-                                        [poll_id, int(current_user.get_id())])
+    name, options, choice_type, possible_recipients, sending_out_to, closes_on_date, mail_template, max_choices,\
+    description, closed = query_db_one('select name, options, choice_type, possible_recipients, sending_out_to,'
+                                       ' closes_on_date, mail_template, max_choices, description, closed from polls '
+                                       'where id=%s and owner_user=%s', [poll_id, int(current_user.get_id())])
+    should_disable = "disabled" if len(sending_out_to) > 0 else ""
 
     if len(sending_out_to) == 0:
+        # Input validation
+        form = PollForm(request.form)
+        if not form.validate():
+            for field, messages in form.errors.items():
+                for err in messages:
+                    flash(err, category='danger')
+            return render_template('editpoll.html', poll_id=poll_id, name=name, options=options,
+                                   choice_type=choice_type,
+                                   possible_recipients=possible_recipients, sending_out_to_amount=len(sending_out_to),
+                                   closes_on_date=closes_on_date, mail_template=mail_template,
+                                   should_disable=should_disable,
+                                   max_choices=max_choices, description=description)
+
         db_execute('update polls set name=%s, options=%s, choice_type=%s, visibility=%s, possible_recipients=%s, closes_on_date=%s, mail_template=%s, max_choices=%s, description=%s \
                     where id=%s and owner_user=%s', [
                 request.form['name'],
@@ -364,7 +437,7 @@ def admin_sendout_deactivatemailing_post():
 
 def result_getter(poll_id):
     results_dict = {}
-    results = subprocess.Popen(['/opt/sw/countvotes.sh', str(poll_id)], stdout=subprocess.PIPE).stdout.readlines()
+    results = subprocess.Popen(['/opt/sw/sw-admin/countvotes.sh', str(poll_id)], stdout=subprocess.PIPE).stdout.readlines()
     for result in results:
         result = result.decode('utf8').strip()
         option, count = result.split(' ', 2)
