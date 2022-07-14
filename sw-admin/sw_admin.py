@@ -435,14 +435,13 @@ def admin_sendout_deactivatemailing_post():
 
     return redirect('/admin/sendout?id=' + str(poll_id), code=303)
 
-def result_getter(poll_id):
+def result_getter(poll_id) -> dict[str, int]:
     results_dict = {}
-    results = subprocess.Popen(['/opt/sw/sw-admin/countvotes.sh', str(poll_id)], stdout=subprocess.PIPE).stdout.readlines()
-    for result in results:
-        result = result.decode('utf8').strip()
-        option, count = result.split(' ', 2)
-        results_dict[option] = int(count)
-    return lambda i: 0 if f"option_{i}" not in results_dict else results_dict[f"option_{i}"]
+    results = subprocess.Popen(['/opt/sw/sw-admin/countvotes.py', str(poll_id), str(1000)], stdout=subprocess.PIPE).stdout.readlines()
+    results_dict = dict(json.loads(b"".join(results).decode("utf8")))
+    print(results_dict)
+    return results_dict 
+    #lambda i: 0 if f"option_{i}" not in results_dict else results_dict[f"option_{i}"]
 
 @app.route('/admin/results', methods=['GET'])
 @login_required
@@ -455,13 +454,13 @@ def admin_results():
         return "Głosowanie nie istnieje", 400
     name, options, possible_recipients_len, sending_out_to_len, sent_to_len = row
 
-    get_result = result_getter(poll_id)
+    vote_results = result_getter(poll_id)
 
     voted_len = int(subprocess.Popen(['du', '--inodes', '-sS', f"/opt/sw/poll/{poll_id}/results/"], stdout=subprocess.PIPE).stdout.read().decode('utf8').split('\t')[0]) - 1
 
     results = []
     for i, option in enumerate(options):
-        results.append({ 'score': get_result(i), 'name': option['name'], 'description': option['description'] })
+        results.append({ 'score': vote_results.get(f"option_{i}", 0), 'name': option['name'], 'description': option['description'] })
 
     return render_template('results.html',
             name=name,
