@@ -20,8 +20,11 @@ def count_votes( poll_id, max_votes_allowed: int = -1):
             marked_options = pattern.findall(file_contents)
 
             if max_votes_allowed >= len(marked_options): 
+                temp_dict = dict()
                 for option in marked_options:
-                    votes[option] += 1
+                    temp_dict[option] = 1
+                for key in temp_dict:
+                    votes[key] += temp_dict[key]
     return json.dumps(dict(votes))
 
 if __name__ == "__main__":
