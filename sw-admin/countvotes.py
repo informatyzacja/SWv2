@@ -17,11 +17,11 @@ def count_votes( poll_id, max_votes_allowed: int = -1):
         with open(vote_dir, "r") as file :
            
            file_contents = file.read()
-           temp  = file_contents.replace("\n", "").split("&")
+           temp  = file_contents.split("&")
            marked_options = dict()
            for element in temp:
                marked_option = pattern.match(element)
-               if int(marked_option.group(2)) < 100: 
+               if int(marked_option.group(2)) < 1000: 
                    marked_options[marked_option.group(1)] = 1
            
            if max_votes_allowed >= len(marked_options):            
