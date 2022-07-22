@@ -45,7 +45,7 @@
         <br /> 
 
         Głosujacy (adresy email w nowych liniach): <br/>
-        <textarea class="form-control" id="pollRecipients" placeholder="1@student.pwr.edu.pl&#10;2@student.pwr.edu.pl&#10;..." rows=10></textarea>
+        <textarea class="form-control" id="pollRecipients" placeholder="1@student.pwr.edu.pl&#10;2@student.pwr.edu.pl&#10;...&#10;lub&#10;123456&#10;234567" rows=10></textarea>
         <br /> <br />
         <div class="d-flex justify-content-left align-items-center">
             Data zakończenia głosowania:
@@ -139,6 +139,18 @@ The Students Electoral Commission of Wrocław University of Science and Technolo
         document.body.appendChild(form);
         form.submit();
     }
+
+    const createPollRecipient = (recipient) => {
+        recipient = recipient.trim();
+        if (recipient.split('@').length === 2) {
+            if (/^\d+$/.test(recipient.split('@')[0])) {
+                return recipient;
+            }
+        } else if (recipient.split('@').length === 1 && /^\d+$/.test(recipient.split('@')[0])) {
+            return recipient + '@student.pwr.edu.pl';
+        }
+    }
+
     function send() {
         let options = Array.from(document.getElementById('pollOptionsTBody').rows)
                 .filter(row => row.childElementCount != 1) // filter out the last row with the add button
@@ -150,7 +162,10 @@ The Students Electoral Commission of Wrocław University of Science and Technolo
             name: val('pollName'),
             options: JSON.stringify(options),
             choiceType: 'multiple-choice',
-            recipients: JSON.stringify(pollRecipients.value.split('\n').filter(email => email.length != 0).map(email => email.trim())),
+            recipients: JSON.stringify(
+                pollRecipients.value.split('\n')
+                .map(email => createPollRecipient(email)).filter(x => x)
+            ),
             closesOnDate: val('pollClosesOnDate') + ' ' + val('pollClosesOnTime'),
             visibility: 'private',
             mailTemplate: val('pollMailTemplate'),
