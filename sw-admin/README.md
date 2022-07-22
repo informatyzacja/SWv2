@@ -281,7 +281,7 @@ Dla klaryfikacji tabelki: w "Wysłano do" wyświetlają się adresy które są w
 :-----------------------------------:
 | ![](.screenshots/results.png)     |
 
-Wyniki głosowania są liczone przez skrypt [`countvotes.sh`](./countvotes.sh) przy otwarciu strony z wynikami.
+Wyniki głosowania są liczone przez skrypt [`countvotes.py`](./countvotes.py) przy otwarciu strony z wynikami.
 Głosy są zapisane w osobnych plikach w katalogu `/opt/sw/polls/{poll_id}/results/`. Skrypt czyta każdy plik w tym katalogu i podaje wyniki, które są pokazywane na stronie.
 
 **Format plików z głosami**
