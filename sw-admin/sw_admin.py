@@ -435,33 +435,32 @@ def admin_sendout_deactivatemailing_post():
 
     return redirect('/admin/sendout?id=' + str(poll_id), code=303)
 
-def result_getter(poll_id):
+def result_getter(poll_id: int, max_choices: int) -> dict[str, int]:
     results_dict = {}
-    results = subprocess.Popen(['/opt/sw/sw-admin/countvotes.sh', str(poll_id)], stdout=subprocess.PIPE).stdout.readlines()
-    for result in results:
-        result = result.decode('utf8').strip()
-        option, count = result.split(' ', 2)
-        results_dict[option] = int(count)
-    return lambda i: 0 if f"option_{i}" not in results_dict else results_dict[f"option_{i}"]
+    results = subprocess.Popen(['/opt/sw/sw-admin/countvotes.py', str(poll_id), str(max_choices)], stdout=subprocess.PIPE).stdout.readlines()
+    results_dict = dict(json.loads(b"".join(results).decode("utf8")))
+    print(results_dict)
+    return results_dict 
+  
 
 @app.route('/admin/results', methods=['GET'])
 @login_required
 def admin_results():
     poll_id = int(request.args.get('id'))
-    row = query_db_one('select name, options, \
+    row = query_db_one('select name, options, max_choices, \
                         json_array_length(possible_recipients), json_array_length(sending_out_to), json_array_length(sent_to) \
                         from polls where id=%s and owner_user=%s', [poll_id, int(current_user.get_id())])
     if not row:
         return "Głosowanie nie istnieje", 400
-    name, options, possible_recipients_len, sending_out_to_len, sent_to_len = row
-
-    get_result = result_getter(poll_id)
+    name, options, max_choices, possible_recipients_len, sending_out_to_len, sent_to_len = row
+    print(f"ilosc opcji :{ max_choices}")
+    vote_results = result_getter(poll_id, max_choices)
 
     voted_len = int(subprocess.Popen(['du', '--inodes', '-sS', f"/opt/sw/poll/{poll_id}/results/"], stdout=subprocess.PIPE).stdout.read().decode('utf8').split('\t')[0]) - 1
 
     results = []
     for i, option in enumerate(options):
-        results.append({ 'score': get_result(i), 'name': option['name'], 'description': option['description'] })
+        results.append({ 'score': vote_results.get(f"option_{i}", 0), 'name': option['name'], 'description': option['description'] })
 
     return render_template('results.html',
             name=name,
