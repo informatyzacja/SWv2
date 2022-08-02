@@ -139,18 +139,6 @@ The Students Electoral Commission of Wrocław University of Science and Technolo
         document.body.appendChild(form);
         form.submit();
     }
-
-    const createPollRecipient = (recipient) => {
-        recipient = recipient.trim();
-        if (recipient.split('@').length === 2) {
-            if (recipient.split('@')[1] === 'student.pwr.edu.pl' && /^\d+$/.test(recipient.split('@')[0])) {
-                return recipient;
-            }
-        } else if (recipient.split('@').length === 1 && /^\d+$/.test(recipient.split('@')[0])) {
-            return recipient + '@student.pwr.edu.pl';
-        }
-    }
-
     function send() {
         let options = Array.from(document.getElementById('pollOptionsTBody').rows)
                 .filter(row => row.childElementCount != 1) // filter out the last row with the add button
@@ -162,9 +150,7 @@ The Students Electoral Commission of Wrocław University of Science and Technolo
             name: val('pollName'),
             options: JSON.stringify(options),
             choiceType: 'multiple-choice',
-            recipients: JSON.stringify(
-                pollRecipients.value.split('\n').map(email => createPollRecipient(email)).filter(x => x)
-            ),
+            recipients: JSON.stringify(pollRecipients.value.split('\n').filter(email => email.length != 0).map(email => email.trim())),
             closesOnDate: val('pollClosesOnDate') + ' ' + val('pollClosesOnTime'),
             visibility: 'private',
             mailTemplate: val('pollMailTemplate'),
