@@ -233,7 +233,7 @@ def admin_copypoll():
     name, options, choice_type, possible_recipients, sending_out_to, closes_on_date, mail_template, max_choices, description = row
     return render_template('copypoll.html', poll_id=poll_id, name=name, options=options, choice_type=choice_type,
                             possible_recipients=possible_recipients, sending_out_to_amount=0,
-                            closes_on_date=closes_on_date, mail_template=mail_template, should_disable=False,
+                            closes_on_date=closes_on_date.strftime("%Y-%m-%d %H:%M"), mail_template=mail_template, should_disable=False,
                             max_choices=max_choices, description=description)
 
 @app.route('/admin/editpoll', methods=['GET'])
@@ -249,7 +249,7 @@ def admin_editpoll():
     should_disable = "disabled" if sending_out_to_amount > 0 else ""
     return render_template('editpoll.html', poll_id=poll_id, name=name, options=options, choice_type=choice_type,
                             possible_recipients=possible_recipients, sending_out_to_amount=sending_out_to_amount,
-                            closes_on_date=closes_on_date, mail_template=mail_template, should_disable=should_disable,
+                            closes_on_date=closes_on_date.strftime("%Y-%m-%d %H:%M"), mail_template=mail_template, should_disable=should_disable,
                             max_choices=max_choices, description=description)
 
 @app.route('/admin/editpoll', methods=['POST'])
