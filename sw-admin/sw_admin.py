@@ -353,10 +353,28 @@ def admin_sendout_plan_post():
     if not row:
         return "Głosowanie nie istnieje", 400
 
+    closeOnDate = query_db_one('select closes_on_date from polls where id=%s and owner_user=%s', [poll_id, int(current_user.get_id())])
+
+
     timestamp = f'{request.form["planSendoutDate"]} {request.form["planSendoutTime"]}'
-    db_execute('set time zone \'Europe/Warsaw\'; update polls set planned_start_sending=%s::timestamptz where id=%s and owner_user=%s', 
-        [timestamp, poll_id, int(current_user.get_id())])
-    get_db().commit()
+
+    #todo: improve name. Tired lol
+    beforeCloseMins = 5
+
+
+    t1=datetime.strptime(timestamp,"%Y-%m-%d %H:%M")
+    t2=datetime.now()
+    tClose = closeOnDate[0].replace(tzinfo=None) #ByPassTMP
+    difCl = tClose - t1
+
+    if t1 <= t2:
+        flash("Data wysyłki jest z przeszłości")
+    elif difCl.total_seconds() / 60 < beforeCloseMins:
+        flash("Wysłanie maili musi nastapić " + str(beforeCloseMins)  + " min najpóźniej przed końcem wyborów")
+    else:
+        db_execute('set time zone \'Europe/Warsaw\'; update polls set planned_start_sending=%s::timestamptz where id=%s and owner_user=%s', 
+            [timestamp, poll_id, int(current_user.get_id())])
+        get_db().commit()
 
     return redirect(f'/admin/sendout?id={poll_id}', code=303)
 
