@@ -23,6 +23,9 @@ app.config['SECRET_KEY'] = config.SESSION_SECRET_KEY
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+#machine Timezone
+machTz = datetime.datetime.now().astimezone().tzinfo
+
 # use dicts and lists as json in postgres
 import psycopg2.extras
 psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
