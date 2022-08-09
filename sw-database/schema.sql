@@ -81,6 +81,7 @@ create table polls(
     closed boolean default false not null,
 
     -- Jeżeli wartość nie jest NULL, o danej godzinie głosowanie zostanie rozpocząte
+    -- Przy Tworzeniu wyborów domyślnie jest NULL
     -- (między innymi ustawiając `mailing_active` na true)
-    planned_start_sending timestamptz not null
+    planned_start_sending timestamptz
 );
