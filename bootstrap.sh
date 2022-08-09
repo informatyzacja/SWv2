@@ -31,12 +31,13 @@ if ! dpkg -l openresty &> /dev/null; then
 	&& codename=`grep -Po 'VERSION="[0-9]+ \(\K[^)]+' /etc/os-release` \
 	&& echo "deb http://openresty.org/package/debian $codename openresty" | tee /etc/apt/sources.list.d/openresty.list \
 	&& apt-get update \
-	&& apt-get -y install --no-install-recommends openresty openresty-opm
+	&& apt-get -y install --no-install-recommends openresty
 fi
 
 unlink /etc/openresty/nginx.conf
 ln -s /opt/sw/sw-openresty/nginx.conf /etc/openresty/nginx.conf
 
+apt-get install -y openresty-opm
 opm get 3scale/lua-resty-url
 pip3 install furl
 
