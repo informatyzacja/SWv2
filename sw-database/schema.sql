@@ -57,8 +57,7 @@ create table polls(
     -- Czas kiedy głosowanie się kończy
     -- Format: "YYYY-MM-DD hh:mm"
     -- Na przykład: "2022-01-01 13:30"
-    -- Issue na zmianę typu na `timestamp with time zone`: https://github.com/informatyzacja-sspwr-projekty/SWv2/issues/10
-    closes_on_date text not null,
+    closes_on_date timestamptz not null,
 
     -- Czy sw-mailsender wysyła maile z `sending_out_to`?
     mailing_active boolean default false not null,
@@ -82,6 +81,7 @@ create table polls(
     closed boolean default false not null,
 
     -- Jeżeli wartość nie jest NULL, o danej godzinie głosowanie zostanie rozpocząte
+    -- Przy Tworzeniu wyborów domyślnie jest NULL
     -- (między innymi ustawiając `mailing_active` na true)
-    planned_start_sending timestamp with time zone
+    planned_start_sending timestamptz
 );

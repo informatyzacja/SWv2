@@ -23,6 +23,9 @@ app.config['SECRET_KEY'] = config.SESSION_SECRET_KEY
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+#machine Timezone
+machTz = datetime.now().astimezone().tzinfo
+
 # use dicts and lists as json in postgres
 import psycopg2.extras
 psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
@@ -233,7 +236,7 @@ def admin_copypoll():
     name, options, choice_type, possible_recipients, sending_out_to, closes_on_date, mail_template, max_choices, description = row
     return render_template('copypoll.html', poll_id=poll_id, name=name, options=options, choice_type=choice_type,
                             possible_recipients=possible_recipients, sending_out_to_amount=0,
-                            closes_on_date=closes_on_date, mail_template=mail_template, should_disable=False,
+                            closes_on_date=closes_on_date.strftime("%Y-%m-%d %H:%M"), mail_template=mail_template, should_disable=False,
                             max_choices=max_choices, description=description)
 
 @app.route('/admin/editpoll', methods=['GET'])
@@ -249,7 +252,7 @@ def admin_editpoll():
     should_disable = "disabled" if sending_out_to_amount > 0 else ""
     return render_template('editpoll.html', poll_id=poll_id, name=name, options=options, choice_type=choice_type,
                             possible_recipients=possible_recipients, sending_out_to_amount=sending_out_to_amount,
-                            closes_on_date=closes_on_date, mail_template=mail_template, should_disable=should_disable,
+                            closes_on_date=closes_on_date.strftime("%Y-%m-%d %H:%M"), mail_template=mail_template, should_disable=should_disable,
                             max_choices=max_choices, description=description)
 
 @app.route('/admin/editpoll', methods=['POST'])
@@ -472,21 +475,28 @@ def admin_results():
         return "Głosowanie nie istnieje", 400
     name, options, max_choices, possible_recipients_len, sending_out_to_len, sent_to_len = row
     print(f"ilosc opcji :{ max_choices}")
-    vote_results = result_getter(poll_id, max_choices)
-
-    voted_len = int(subprocess.Popen(['du', '--inodes', '-sS', f"/opt/sw/poll/{poll_id}/results/"], stdout=subprocess.PIPE).stdout.read().decode('utf8').split('\t')[0]) - 1
 
     results = []
-    for i, option in enumerate(options):
-        results.append({ 'score': vote_results.get(f"option_{i}", 0), 'name': option['name'], 'description': option['description'] })
+
+    try:
+        vote_results = result_getter(poll_id, max_choices)
+
+        voted_len = int(subprocess.Popen(['du', '--inodes', '-sS', f"/opt/sw/poll/{poll_id}/results/"], stdout=subprocess.PIPE).stdout.read().decode('utf8').split('\t')[0]) - 1
+
+        
+        for i, option in enumerate(options):
+            results.append({ 'score': vote_results.get(f"option_{i}", 0), 'name': option['name'], 'description': option['description'] })
+    except:
+        return "Nikt nie zagłosował v Brak plików", 400
+
 
     return render_template('results.html',
-            name=name,
-            possible_recipients_len=possible_recipients_len,
-            sending_out_to_len=sending_out_to_len,
-            sent_to_len=sent_to_len,
-            voted_len=voted_len,
-            results=results)
+        name=name,
+        possible_recipients_len=possible_recipients_len,
+        sending_out_to_len=sending_out_to_len,
+        sent_to_len=sent_to_len,
+        voted_len=voted_len,
+        results=results)
 
 @app.route('/admin/peek', methods=['GET'])
 @login_required
