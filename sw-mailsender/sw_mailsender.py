@@ -13,6 +13,7 @@ import random
 from email.mime.text import MIMEText
 from email.header import Header
 from datetime import datetime
+from furl import furl
 
 sys.path.append('..') # for ../config.py
 import config
@@ -47,7 +48,7 @@ def make_token(poll_id):
 
 def make_link(poll_id):
     token = make_token(poll_id)
-    return f"{config.BASE_URL}/v/{token}/"
+    return furl(config.BASE_URL).add(path='/v/').add(path=token).add(path='/')
 
 def make_a_href(poll_id):
     link = make_link(poll_id)
