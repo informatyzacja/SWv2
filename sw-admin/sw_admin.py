@@ -24,7 +24,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 #machine Timezone
-machTz = datetime.datetime.now().astimezone().tzinfo
+machTz = datetime.now().astimezone().tzinfo
 
 # use dicts and lists as json in postgres
 import psycopg2.extras
