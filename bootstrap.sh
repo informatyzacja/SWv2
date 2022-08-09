@@ -9,11 +9,18 @@
 set -xeu
 shopt -s nullglob
 
-# Allow login to root like to the vagrant user
-mkdir -p /root/.ssh
-cp /home/vagrant/.ssh/authorized_keys /root/.ssh/
-chown root:root /root/.ssh /root/.ssh/authorized_keys
-chmod 600 /root/.ssh /root/.ssh/authorized_keys
+prod=0
+if [[ $1 == --prod ]]; then
+	prod=1
+fi
+
+if ! ((prod)); then
+	# Allow login to root like to the vagrant user
+	mkdir -p /root/.ssh
+	cp /home/vagrant/.ssh/authorized_keys /root/.ssh/
+	chown root:root /root/.ssh /root/.ssh/authorized_keys
+	chmod 600 /root/.ssh /root/.ssh/authorized_keys
+fi
 
 # Do an apt-get update only if there wasn't one in the last 3 hours (makes vagrant provision faster)
 if [ -z "$(find /var/cache/apt -maxdepth 0 -mmin -180)" ]; then
@@ -41,13 +48,15 @@ apt-get install -y openresty-opm
 opm get 3scale/lua-resty-url
 pip3 install furl
 
-rm -f /etc/postfix/{main.cf,password}
-ln -s /opt/sw/sw-postfix/main.cf /etc/postfix/
+if ! ((prod)); then
+	rm -f /etc/postfix/{main.cf,password}
+	ln -s /opt/sw/sw-postfix/main.cf /etc/postfix/
 
-cp /opt/sw/sw-postfix/password /etc/postfix/
-postmap /etc/postfix/password # Can't do it on a symlink
+	cp /opt/sw/sw-postfix/password /etc/postfix/
+	postmap /etc/postfix/password # Can't do it on a symlink
 
-systemctl enable --now postgresql || true
+	systemctl enable --now postgresql || true
+fi
 
 for requirements_file in /opt/sw/*/requirements.txt; do
     pip3 install -r "$requirements_file"
@@ -63,7 +72,10 @@ services_unit_files=( /opt/sw/*/*.{service,timer,socket} )
 cp -t /etc/systemd/system/ -- "${services_unit_files[@]}" 
 systemctl daemon-reload
 
-extra_services=( openresty postfix )
+extra_services=()
+if ! ((prod)); then
+	extra_services+=( openresty postfix )
+fi
 
 all_services=()
 for service_unit_file in "${services_unit_files[@]}" "${extra_services[@]}"; do
@@ -92,9 +104,11 @@ make-script sw-logs "journalctl -e -b $(printf -- '-u %q"*" ' "${extra_services[
 make-script sw-status "systemctl status -l --no-pager --lines=100 $(printf '%q ' "${all_services[@]}")"
 make-script sw-restart "systemctl reset-failed $(printf '%q ' "${all_services[@]}"); systemctl restart $(printf '%q ' "${all_services[@]}")"
 
-# Mount runtime directories as tmpfs so this works when ran on windows
-for dir in /opt/sw/{poll,v,v-archive,logs}; do
-  mount -t tmpfs tmpfs "$dir" &
-done
+if ! ((prod)); then
+	# Mount runtime directories as tmpfs so this works when ran on windows
+	for dir in /opt/sw/{poll,v,v-archive,logs}; do
+		mount -t tmpfs tmpfs "$dir" &
+	done
+	wait
+fi
 
-wait
