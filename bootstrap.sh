@@ -6,6 +6,9 @@
 # przydatne przy modyfikacji plików dla systemd: .service, .timer i .socket
 #
 
+# Jest też wywoływany przy budowaniu kontenera Podmana na produkcję, wtedy
+# z argumentem --prod
+
 set -xeu
 shopt -s nullglob
 
@@ -13,6 +16,31 @@ prod=0
 if [[ $1 == --prod ]]; then
 	prod=1
 fi
+
+# Na dockerze/podmanie przy konfiguracji systemd nie jest dostępne - nie działa `systemctl enable`
+# można to obejść manualnie tworząc symlink w /etc/systemd/system/{target}.wants/{unit} do pliku z unitem
+systemctl_enable() {
+	if [[ -d /run/systemd/system ]]; then
+		systemctl enable "$@"
+	else
+		if [[ $1 == --now ]]; then
+			shift
+		fi
+
+		local unit_name="$1"
+		local unit_file="/etc/systemd/system/$unit_name"
+		local wanted_by=$(< "$unit_file" sed 's/\s*#.*//' | awk -F'=' '/^\[.*\]$/{section=$0;next} section=="[Install]" { $1=""; print }')
+		local target
+		for target in $wanted_by; do
+			local target_path="/etc/systemd/system/${target}.wants/"
+			local symlink_path="$target_path/$unit_name"
+			local symlink_target="/etc/systemd/system/$unit_name"
+			mkdir -p "$target_path"
+			ln -s "$symlink_target" "$symlink_path"
+		done
+	fi
+}
+
 
 if ! ((prod)); then
 	# Allow login to root like to the vagrant user
@@ -28,9 +56,12 @@ if [ -z "$(find /var/cache/apt -maxdepth 0 -mmin -180)" ]; then
 fi
 
 apt-get install -y --no-install-recommends \
-    git wget gnupg ca-certificates less procps sudo mailutils htop gunicorn \
-    python3 python3-flask python3-flask-login python3-psycopg2 python3-bcrypt python3-pip python3-tz python3-dateutil \
+    git wget gnupg ca-certificates less procps sudo mailutils htop gunicorn gawk \
+    python3 python3-flask python3-flask-login python3-psycopg2 python3-bcrypt python3-pip python3-tz python3-dateutil
+
+if ! ((prod)); then
     postgresql postgresql-client
+fi
 
 # Install openresty if not already installed
 if ! dpkg -l openresty &> /dev/null; then
@@ -70,7 +101,9 @@ chown -R www-data:www-data /opt/sw/{v,poll,logs}
 services_unit_files=( /opt/sw/*/*.{service,timer,socket} )
 
 cp -t /etc/systemd/system/ -- "${services_unit_files[@]}" 
-systemctl daemon-reload
+if ! ((prod)); then
+	systemctl daemon-reload
+fi
 
 extra_services=()
 if ! ((prod)); then
@@ -82,17 +115,23 @@ for service_unit_file in "${services_unit_files[@]}" "${extra_services[@]}"; do
     all_services+=( "$(basename "$service_unit_file")" )
 done
 
-for service_name in "${all_services[@]}"; do
-    {
-	if systemctl cat "$service_name" | grep -q '^\[Install\]'; then
-	    if systemctl is-failed "$service_name" >/dev/null; then
-		systemctl reset-failed "$service_name"
-	    fi
-	    systemctl restart "$service_name" || true
-	    systemctl enable --now "$service_name" || true
-	fi
-    } &
-done
+if (( prod )); then
+	for service_name in "${all_services[@]}"; do
+        systemctl_enable "$service_name"
+    done
+else
+    for service_name in "${all_services[@]}"; do
+        {
+        if systemctl cat "$service_name" | grep -q '^\[Install\]'; then
+            if systemctl is-failed "$service_name" >/dev/null; then
+            systemctl reset-failed "$service_name"
+            fi
+            systemctl restart "$service_name" || true
+            systemctl enable --now "$service_name" || true
+        fi
+        } &
+    done
+fi
 
 make-script() {
     echo "#!/bin/sh
@@ -109,6 +148,6 @@ if ! ((prod)); then
 	for dir in /opt/sw/{poll,v,v-archive,logs}; do
 		mount -t tmpfs tmpfs "$dir" &
 	done
-	wait
+	wait # wait for this "&" and previous one - when enabling systemd services
 fi
 
