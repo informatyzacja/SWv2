@@ -13,7 +13,7 @@ set -xeu
 shopt -s nullglob
 
 prod=0
-if [[ $1 == --prod ]]; then
+if [[ $# -ge 1 && $1 == --prod ]]; then
 	prod=1
 fi
 
@@ -60,7 +60,7 @@ apt-get install -y --no-install-recommends \
     python3 python3-flask python3-flask-login python3-psycopg2 python3-bcrypt python3-pip python3-tz python3-dateutil
 
 if ! ((prod)); then
-    postgresql postgresql-client
+    apt-get install -y --no-install-recommends postgresql postgresql-client
 fi
 
 # Install openresty if not already installed
