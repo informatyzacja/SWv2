@@ -29,7 +29,7 @@ jobs:
       - name: Zatrzymaj vagranta i usuń poprzednią maszynę wirtualną jeżeli została
         run: |
           vagrant halt || true
-          vagrant destroy || true
+          vagrant destroy -f --no-tty || true
 
       # Runs a single command using the runners shell
       - name: Wywołaj vagrant up
@@ -45,4 +45,4 @@ jobs:
         run: vagrant halt
         
       - name: Pozbądź się maszyny wirtualnej
-        run: vagrant destroy
+        run: vagrant destroy -f --no-tty
