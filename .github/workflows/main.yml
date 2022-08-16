@@ -30,6 +30,8 @@ jobs:
         run: |
           vagrant halt || true
           vagrant destroy -f --no-tty || true
+          # usuń wszystkie maszyny
+          VBoxManage list vms | grep -Eo '\{[-0-9a-f]*\}' | while read -r uuid; do VBoxManage unregistervm "$uuid" --delete; done || true
 
       # Runs a single command using the runners shell
       - name: Wywołaj vagrant up
