@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: CI/CD
 
 # Controls when the workflow will run
 on:
@@ -15,8 +15,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
+  test-vagrant:
     # The type of runner that the job will run on
     runs-on: self-hosted
 
@@ -48,3 +47,52 @@ jobs:
         
       - name: Pozbądź się maszyny wirtualnej
         run: vagrant destroy -f --no-tty
+        
+  deploy-master:
+    runs-on: self-hosted
+    
+    # Deploy tylko jeżeli testy przejdą
+    needs: [test-vagrant]
+    
+    # Jedynie na masterze
+    if: github.ref == 'refs/heads/master'
+    
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      
+      - name: Zbuduj kontener
+        run: podman built -t sw .
+        
+      - name: Prześlij kontener na VPS
+        run: podman save sw | pv | ssh wybory.samorzad.pwr.edu.pl 'sudo podman load'
+
+      - name: Stwórz nowy kontener
+        run: |
+          ssh wybory.samorzad.pwr.edu.pl '
+            set -xe
+            sudo podman create \
+              --replace \
+              -v /opt/sw/v:/opt/sw/v \
+              -v /opt/sw/poll:/opt/sw/poll \
+              -v /opt/sw/v-archive:/opt/sw/v-archive \
+              -v /opt/sw/logs:/opt/sw/logs \
+              --pull never \
+              --restart unless-stopped \
+              --name system-wyborczy \
+              localhost/sw
+            '
+       
+      - name: Zastąp usługę nowym kontenerem
+        run: |
+          ssh wybory.samorzad.pwr.edu.pl '
+            set -xe
+             
+            sudo systemctl stop system-wyborczy
+             
+            cd /etc/systemd/system
+            sudo podman generate systemd --name --files system-wyborczy
+            sudo systemctl daemon-reload
+            
+            sudo systemctl start system-wyborczy
+          '
