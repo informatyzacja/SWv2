@@ -46,7 +46,10 @@ jobs:
         run: vagrant halt
         
       - name: Pozbądź się maszyny wirtualnej
-        run: vagrant destroy -f --no-tty
+        run: |
+          vagrant destroy -f --no-tty
+          # usuń wszystkie maszyny
+          VBoxManage list vms | grep -Eo '\{[-0-9a-f]*\}' | while read -r uuid; do VBoxManage unregistervm "$uuid" --delete; done || true
         
   deploy-master:
     runs-on: self-hosted
@@ -88,11 +91,14 @@ jobs:
           ssh wybory.samorzad.pwr.edu.pl '
             set -xe
              
-            sudo systemctl stop container-system-wyborczy
+            if sudo systemctl is-active --quiet container-system-wyborczy; then
+              sudo systemctl stop container-system-wyborczy
+            fi
              
             cd /etc/systemd/system
             sudo podman generate systemd --name --files system-wyborczy
             sudo systemctl daemon-reload
             
+            sudo systemctl reset-failed container-system-wyborczy
             sudo systemctl start container-system-wyborczy
           '
