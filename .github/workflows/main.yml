@@ -88,11 +88,11 @@ jobs:
           ssh wybory.samorzad.pwr.edu.pl '
             set -xe
              
-            sudo systemctl stop system-wyborczy
+            sudo systemctl stop container-system-wyborczy
              
             cd /etc/systemd/system
             sudo podman generate systemd --name --files system-wyborczy
             sudo systemctl daemon-reload
             
-            sudo systemctl start system-wyborczy
+            sudo systemctl start container-system-wyborczy
           '
