@@ -164,9 +164,6 @@ jobs:
             cd /etc/systemd/system
             sudo podman generate systemd --name --files system-wyborczy-staging-${{ github.event.pull_request.number }}
             sudo systemctl daemon-reload
-            
-            sudo systemctl reset-failed container-system-wyborczy-staging-${{ github.event.pull_request.number }}
-            sudo systemctl start container-system-wyborczy-staging-${{ github.event.pull_request.number }}
           '
           
       - name: Uruchom nową wersję usługi systemd
