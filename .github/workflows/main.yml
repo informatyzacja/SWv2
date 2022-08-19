@@ -16,8 +16,10 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   test-vagrant:
+    name: Testy w vagrancie
+    
     # The type of runner that the job will run on
-    runs-on: self-hosted
+    runs-on: sw-vagrant
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -52,7 +54,7 @@ jobs:
           VBoxManage list vms | grep -Eo '\{[-0-9a-f]*\}' | while read -r uuid; do VBoxManage unregistervm "$uuid" --delete; done || true
         
   deploy-master:
-    runs-on: self-hosted
+    runs-on: sw-podman
     
     # Deploy tylko jeżeli testy przejdą
     needs: [test-vagrant]
@@ -86,19 +88,92 @@ jobs:
               localhost/sw
             '
        
-      - name: Zastąp usługę nowym kontenerem
+      - name: Wyłącz starą usługę systemd
+        run: |
+          ssh wybory.samorzad.pwr.edu.pl '
+            set -xe
+            if sudo systemctl is-active --quiet container-system-wyborczy; then
+              sudo systemctl stop container-system-wyborczy
+            fi
+          '
+          
+      - name: Wygeneruj nowy plik usługi systemd
         run: |
           ssh wybory.samorzad.pwr.edu.pl '
             set -xe
              
-            if sudo systemctl is-active --quiet container-system-wyborczy; then
-              sudo systemctl stop container-system-wyborczy
-            fi
-             
             cd /etc/systemd/system
             sudo podman generate systemd --name --files system-wyborczy
             sudo systemctl daemon-reload
-            
-            sudo systemctl reset-failed container-system-wyborczy
+          '
+          
+      - name: Uruchom nową wersję usługi systemd
+        run: |
+          ssh wybory.samorzad.pwr.edu.pl '
+            set -xe
+
+            sudo systemctl reset-failed container-system-wyborczy || true
             sudo systemctl start container-system-wyborczy
+          '
+                  
+        
+        
+        
+  staging-podman:
+    runs-on: sw-podman
+    
+    # not master => pull request
+    if: github.ref != 'refs/heads/master'
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Zbuduj kontener
+        run: podman build --build-arg SWV2_ENV=staging -t sw-staging-${{ github.event.pull_request.number }} .
+        
+      - name: Prześlij kontener na VPS
+        run: podman save sw-staging-${{ github.event.pull_request.number }} | pv | ssh wybory.samorzad.pwr.edu.pl 'sudo podman load'
+        
+      - name: Stwórz nowy kontener
+        run: |
+          ssh wybory.samorzad.pwr.edu.pl '
+            set -xe
+            sudo podman create \
+              --replace \
+              --pull never \
+              --restart unless-stopped \
+              --name system-wyborczy-staging-${{ github.event.pull_request.number }} \
+              localhost/sw-staging-${{ github.event.pull_request.number }}
+            '
+
+       
+      - name: Wyłącz starą usługę systemd
+        run: |
+          ssh wybory.samorzad.pwr.edu.pl '
+            set -xe
+            if sudo systemctl is-active --quiet container-system-wyborczy-staging-${{ github.event.pull_request.number }}; then
+              sudo systemctl stop container-system-wyborczy-staging-${{ github.event.pull_request.number }}
+            fi
+          '
+          
+      - name: Wygeneruj nowy plik usługi systemd
+        run: |
+          ssh wybory.samorzad.pwr.edu.pl '
+            set -xe
+             
+            cd /etc/systemd/system
+            sudo podman generate systemd --name --files system-wyborczy-staging-${{ github.event.pull_request.number }}
+            sudo systemctl daemon-reload
+            
+            sudo systemctl reset-failed container-system-wyborczy-staging-${{ github.event.pull_request.number }}
+            sudo systemctl start container-system-wyborczy-staging-${{ github.event.pull_request.number }}
+          '
+          
+      - name: Uruchom nową wersję usługi systemd
+        run: |
+          ssh wybory.samorzad.pwr.edu.pl '
+            set -xe
+
+            sudo systemctl reset-failed container-system-wyborczy-staging-${{ github.event.pull_request.number }} || true
+            sudo systemctl start container-system-wyborczy-staging-${{ github.event.pull_request.number }}
           '
