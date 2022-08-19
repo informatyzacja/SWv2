@@ -38,7 +38,7 @@ Vagrant.configure("2") do |config|
 
   # Use a script to provision the VM
   config.vagrant.plugins = [ "vagrant-vbguest" ]
-  config.vm.provision :shell, path: "bootstrap.sh", run: "always"
+  config.vm.provision :shell, path: "bootstrap.sh", args: ["--development"], run: "always"
 
   # Only reset the database when provisioning explicitly
   config.vm.provision :shell, path: "sw-database/resetdb.sh"
