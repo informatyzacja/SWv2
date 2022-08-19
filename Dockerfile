@@ -1,20 +1,16 @@
-# Docker jest do użycia na produkcji - do developowania użyj vagranta!
-# Bazowane na https://github.com/robertdebock/docker-debian-systemd
+# Dockerfile jest do użycia na produkcji/staging - do developowania 
+# użyj vagranta!
+#
+# Do uruchomienia (z powodu wykorzystania systemd) kontener działa
+# tylko na Podmanie, nie Dockerze
 
-# Do uruchomienia (z powodu systemd) potrzebne jest włączone systemd na hoście, i podanie 
-# do docker run argumentów: --tty --privileged --volume /sys/fs/cgroup:/sys/fs/cgroup:ro
-
-# TODO: czy --tty jest potrzebne? w README.md repo docker-debian-systemd jest podane,
-# ale może być tylko jako przykład - jednak pamiętam że gdzieś w internecie pisali o tym
-# że jest potrzebne przy systemd
+# Budowanie wersji na produkcję: podman build .
+# Budowanie wersji na staging: podman build --build-arg SWV2_ENV=staging .
 
 FROM debian:11
 
-
-# TODO: to coś daje/ma sens? zaimportowane z https://github.com/robertdebock/docker-debian-systemd
-ENV container docker
+# Bazowane na https://github.com/robertdebock/docker-debian-systemd
 ENV DEBIAN_FRONTEND noninteractive
-
 RUN bash -c 'shopt -s nullglob && \
     apt-get update && \
     apt-get install -y systemd systemd-sysv && \
@@ -28,7 +24,9 @@ RUN bash -c 'shopt -s nullglob && \
     /lib/systemd/system/systemd-update-utmp*'
 
 ADD . /opt/sw
-RUN /opt/sw/bootstrap.sh --prod
+
+ARG SWV2_ENV=production
+RUN /opt/sw/bootstrap.sh --$SWV2_ENV
 
 VOLUME [ "/sys/fs/cgroup" ]
 CMD ["/lib/systemd/systemd"]
