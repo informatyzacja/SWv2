@@ -52,7 +52,7 @@ fi
 
 # Do an apt-get update only if there wasn't one in the last 3 hours (makes vagrant provision faster)
 if [ -z "$(find /var/cache/apt -maxdepth 0 -mmin -180)" ]; then
-    apt-get update              
+    apt-get update
 fi
 
 apt-get install -y --no-install-recommends \
@@ -65,14 +65,24 @@ fi
 
 # Install openresty if not already installed
 if ! dpkg -l openresty &> /dev/null; then
-    wget -O - https://openresty.org/package/pubkey.gpg | apt-key add - \
-	&& codename=`grep -Po 'VERSION="[0-9]+ \(\K[^)]+' /etc/os-release` \
-	&& echo "deb http://openresty.org/package/debian $codename openresty" | tee /etc/apt/sources.list.d/openresty.list \
-	&& apt-get update \
-	&& apt-get -y install --no-install-recommends openresty
+	# there's only ubuntu and debian
+	# nothing else exists
+	if lsb_release -a | grep -i -q ubuntu; then
+		wget -O - https://openresty.org/package/pubkey.gpg | sudo gpg --dearmor -o /usr/share/keyrings/openresty.gpg
+		echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/openresty.gpg] http://openresty.org/package/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/openresty.list > /dev/null
+		apt-get update
+		apt-get -y install --no-install-recommends openresty
+	else
+		# debian
+		wget -O - https://openresty.org/package/pubkey.gpg | apt-key add - \
+			&& codename=`grep -Po 'VERSION="[0-9]+ \(\K[^)]+' /etc/os-release` \
+			&& echo "deb http://openresty.org/package/debian $codename openresty" | tee /etc/apt/sources.list.d/openresty.list \
+			&& apt-get update \
+			&& apt-get -y install --no-install-recommends openresty
+	fi
 fi
 
-unlink /etc/openresty/nginx.conf
+unlink /etc/openresty/nginx.conf || true
 ln -s /opt/sw/sw-openresty/nginx.conf /etc/openresty/nginx.conf
 
 apt-get install -y openresty-opm
@@ -100,7 +110,7 @@ chown -R www-data:www-data /opt/sw/{v,poll,logs}
 
 services_unit_files=( /opt/sw/*/*.{service,timer,socket} )
 
-cp -t /etc/systemd/system/ -- "${services_unit_files[@]}" 
+cp -t /etc/systemd/system/ -- "${services_unit_files[@]}"
 if ! ((prod)); then
 	systemctl daemon-reload
 fi
