@@ -45,7 +45,7 @@
         <br /> 
 
         Głosujacy (adresy email w nowych liniach): <br/>
-        <textarea class="form-control" id="pollRecipients" placeholder="1@student.pwr.edu.pl&#10;2@student.pwr.edu.pl&#10;..." rows=10></textarea>
+        <textarea class="form-control" id="pollRecipients" placeholder="1@student.pwr.edu.pl&#10;2@student.pwr.edu.pl&#10;123456&#10;..." rows=10></textarea>
         <br /> <br />
         <div class="d-flex justify-content-left align-items-center">
             Data zakończenia głosowania:
@@ -110,12 +110,12 @@ The Students Electoral Commission of Wrocław University of Science and Technolo
 
 <script>
     function deleteRow(el) {
-        var row = el.parentNode.parentNode;
+        const row = el.parentNode.parentNode;
         document.getElementById('pollOptionsTBody').removeChild(row);
     }
     function addRow(el) {
-        var row = el.parentNode.parentNode;
-        var tr = document.createElement('tr');
+        const row = el.parentNode.parentNode;
+        const tr = document.createElement('tr');
         tr.innerHTML = '<td><input class="form-control" type="text" placeholder="Jan Kowalski"></td>';
         tr.innerHTML += '<td><input class="form-control" type="text" placeholder="Wydział Architektury"></td>';
         tr.innerHTML += '<td><button class="btn btn-danger" onclick="deleteRow(this)"><i class="fas fa-trash-alt"></i></button></td>';
@@ -125,7 +125,7 @@ The Students Electoral Commission of Wrocław University of Science and Technolo
         return document.getElementById(elName).value; 
     }
     function sendForm(data) {
-        let form = document.createElement('form');
+        const form = document.createElement('form');
         form.method = "POST";
         form.action = "";
         form.style.display = 'none';
@@ -140,17 +140,24 @@ The Students Electoral Commission of Wrocław University of Science and Technolo
         form.submit();
     }
     function send() {
-        let options = Array.from(document.getElementById('pollOptionsTBody').rows)
+        const options = Array.from(document.getElementById('pollOptionsTBody').rows)
                 .filter(row => row.childElementCount != 1) // filter out the last row with the add button
                 .map(row => ({
                     name: row.children[0].getElementsByTagName('input')[0].value,
                     description: row.children[1].getElementsByTagName('input')[0].value,
                 }));
-        let data = {
+        const createPollRecipient = (recipient) => {
+            recipient = recipient.trim();
+            if (recipient.split('@').length === 1 && /^\d+$/.test(recipient.split('@')[0])) {
+                return recipient.concat('@student.pwr.edu.pl');
+            }
+            return recipient;
+        }
+        const data = {
             name: val('pollName'),
             options: JSON.stringify(options),
             choiceType: 'multiple-choice',
-            recipients: JSON.stringify(pollRecipients.value.split('\n').filter(email => email.length != 0).map(email => email.trim())),
+            recipients: JSON.stringify(pollRecipients.value.split('\n').filter(email => email.length != 0).map(recipient => createPollRecipient(recipient))),
             closesOnDate: val('pollClosesOnDate') + ' ' + val('pollClosesOnTime'),
             visibility: 'private',
             mailTemplate: val('pollMailTemplate'),
