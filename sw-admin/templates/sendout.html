@@ -1,6 +1,18 @@
 {% extends "baseloggedin.html" %}
 {% block title %}Rozsyłka maili dla głosowania "{{name}}"{% endblock %}
 {% block content %}
+
+<!-- Miejsce na błędy, na przykład "nie można edytować głosowania ponieważ wiadomości zostały już rozesłane -->
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="my-4">
+            {% for message in messages %}
+                <div class="alert alert-danger" role="alert">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
 <div class="row">
     <div class="col-md-12">
         <h3>Rozsyłka maili dla głosowania "{{name}}"</h3>

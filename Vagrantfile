@@ -4,7 +4,13 @@ $msg_up = <<MSG_UP
 System Wyborczy v2
 
     - Panel administratora:
-          http://localhost:8080/admin
+      http://localhost:8080/admin
+
+      (Default) 
+         Login:
+          admin
+        Pass:
+          haker7
 
     - Konsola maszyny wirtualnej:
           $ vagrant ssh
@@ -19,6 +25,13 @@ System Wyborczy v2
 
     Panel administratora:
         http://localhost:8080/admin
+        
+    (Default) 
+    Login:
+      admin
+    Pass:
+      haker7
+	
 
     Logi:
         $ sw-logs
